@@ -681,16 +681,16 @@
 
   <!-- A-Frame Scene -->
   <a-scene
-    id="scene"
-    vr-mode-ui="enabled: false"
-    embedded
-    arjs="
-      sourceType: webcam;
-      detectionMode: mono_and_matrix;
-      matrixCodeType: 3x3;
-      debugUIEnabled: false;
-    "
-  >
+  id="scene"
+  vr-mode-ui="enabled: false"
+  embedded
+  arjs="sourceType: webcam; facingMode: environment; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
+  renderer="logarithmicDepthBuffer: true; precision: mediump;"
+  device-orientation-permission-ui="enabled: false"
+  style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;"
+>
+
+
     <!-- Marcador 20: Lámpara -->
     <a-marker id="marker20" type="barcode" value="20">
       <a-entity 
@@ -1183,6 +1183,23 @@
           }
         });
       }
+      // --- Ajuste de cámara para móviles ---
+      const sceneEl = document.querySelector('a-scene');
+
+      sceneEl.addEventListener('arjs-video-loaded', () => {
+        const arVideo = document.querySelector('video');
+        if (arVideo) {
+          arVideo.setAttribute('playsinline', '');
+          arVideo.style.width = '100vw';
+          arVideo.style.height = '100vh';
+          arVideo.style.objectFit = 'cover';
+          arVideo.style.position = 'fixed';
+          arVideo.style.top = '0';
+          arVideo.style.left = '0';
+          console.log('🎥 Cámara ajustada al tamaño completo');
+        }
+      });
+
     });
   </script>
 </body>
