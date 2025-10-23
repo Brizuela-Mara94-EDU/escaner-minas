@@ -37,7 +37,7 @@ body, html {
   box-sizing: border-box;
   width: 100%;
   font-family: 'Arida', sans-serif;
-  background: #e8dcc4;
+  background: transparent;
   color: white;
   overflow-x: hidden;
   overflow-y: auto;
@@ -888,4 +888,18 @@ a-scene canvas {
   #toggle-info-btn {
     display: none !important;
   }
+}
+
+
+/* 🔹 Forzar que el video de la cámara sea visible en AR.js */
+video[webkit-playsinline], video[playsinline], video {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
+  z-index: 0 !important;
+  opacity: 1 !important;
+  background: black !important;
 }
