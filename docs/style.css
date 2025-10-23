@@ -904,7 +904,6 @@ a-scene video {
   }
 }
 
-
 /* ✅ Video principal de AR.js */
 a-scene video {
   position: fixed !important;
@@ -930,13 +929,14 @@ a-scene video {
   background: black !important;
   opacity: 1 !important;
   display: block !important;
+  transition: opacity 0.3s ease; /* ✅ AÑADIDO: transición suave */
 }
 
 /* ✅ Cuando AR.js ya está activo, ocultar el preview */
 body.arjs-active #mobile-camera-preview {
-  display: none !important;
+  opacity: 0 !important; /* ✅ CAMBIADO: de display a opacity */
+  pointer-events: none !important; /* ✅ AÑADIDO */
 }
-
 
 /* Ocultar controles de video nativos */
 video::-webkit-media-controls {

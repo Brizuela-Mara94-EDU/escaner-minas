@@ -274,7 +274,10 @@ function initAR() {
   // 🔹 Listener: cuando AR.js carga su propio video, reemplaza el preview
   sceneEl.addEventListener('arjs-video-loaded', () => {
     const preview = document.getElementById('mobile-camera-preview');
-    if (preview) preview.remove();
+    if (preview) {
+      preview.style.opacity = '0'; // ✅ Primero desvanecer
+      setTimeout(() => preview.remove(), 300); // ✅ Luego eliminar después de la transición
+    }
 
     // ✅ Señal para que el CSS oculte el preview
     document.body.classList.add('arjs-active');
