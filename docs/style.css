@@ -302,7 +302,7 @@ a-scene canvas {
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
-  background: black !important; /* Fondo negro mientras carga */
+  background: transparent!important; /* Fondo negro mientras carga */
 }
 
 a-scene video {
