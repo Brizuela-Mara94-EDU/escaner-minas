@@ -425,6 +425,31 @@
   });
 
   function initAR() {
+    // 🚀 Iniciar la cámara inmediatamente antes de crear la escena
+    if (isMobile) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then((stream) => {
+          const video = document.createElement('video');
+          video.srcObject = stream;
+          video.play();
+          video.setAttribute('playsinline', '');
+          video.setAttribute('webkit-playsinline', '');
+          video.style.position = 'fixed';
+          video.style.top = '0';
+          video.style.left = '0';
+          video.style.width = '100vw';
+          video.style.height = '100vh';
+          video.style.objectFit = 'cover';
+          video.style.zIndex = '0';
+          video.style.opacity = '1';
+          video.id = 'mobile-camera-preview';
+          document.body.appendChild(video);
+        })
+        .catch((err) => {
+          console.error('❌ No se pudo iniciar la cámara antes del AR.js:', err);
+        });
+    }
+
     if (sceneEl && sceneEl.parentNode) {
       arContainer.removeChild(sceneEl);
     }
@@ -581,6 +606,8 @@
     });
 
     sceneEl.addEventListener('arjs-video-loaded', (event) => {
+      const preview = document.getElementById('mobile-camera-preview');
+      if (preview) preview.remove();
       console.log('✅ Video AR.js cargado correctamente');
       updateDetectionStatus("Cámara activa - Busca un marcador");
     });

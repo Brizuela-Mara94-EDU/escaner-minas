@@ -903,3 +903,19 @@ video[webkit-playsinline], video[playsinline], video {
   opacity: 1 !important;
   background: black !important;
 }
+
+/* 🔹 Asegura que el video cubra toda la pantalla sin franjas blancas */
+#mobile-camera-preview,
+video[playsinline],
+video[webkit-playsinline],
+video {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
+  background: black !important;
+  z-index: 0 !important;
+  opacity: 1 !important;
+}
