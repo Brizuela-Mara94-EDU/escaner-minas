@@ -680,15 +680,26 @@
   </button>
 
   <!-- A-Frame Scene -->
-  <a-scene
+ <a-scene
   id="scene"
-  vr-mode-ui="enabled: false"
   embedded
-  arjs="sourceType: webcam; facingMode: environment; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
+  vr-mode-ui="enabled: false"
+  arjs="
+    sourceType: webcam;
+    facingMode: environment;
+    detectionMode: mono_and_matrix;
+    matrixCodeType: 3x3;
+    debugUIEnabled: false;
+    maxDetectionRate: 15;
+    minConfidence: 0.05;
+    sourceWidth: 640;
+    sourceHeight: 480;
+    displayWidth: 640;
+    displayHeight: 480;
+  "
   renderer="logarithmicDepthBuffer: true; precision: mediump;"
-  device-orientation-permission-ui="enabled: false"
-  style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;"
 >
+
 
 
     <!-- Marcador 20: Lámpara -->
