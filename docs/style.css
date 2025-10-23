@@ -917,26 +917,6 @@ a-scene video {
   display: block !important;
 }
 
-/* ✅ Preview temporal (mientras inicia AR.js) */
-#mobile-camera-preview {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  object-fit: cover !important;
-  z-index: 0 !important;
-  background: black !important;
-  opacity: 1 !important;
-  display: block !important;
-  transition: opacity 0.3s ease; /* ✅ AÑADIDO: transición suave */
-}
-
-/* ✅ Cuando AR.js ya está activo, ocultar el preview */
-body.arjs-active #mobile-camera-preview {
-  opacity: 0 !important; /* ✅ CAMBIADO: de display a opacity */
-  pointer-events: none !important; /* ✅ AÑADIDO */
-}
 
 /* Ocultar controles de video nativos */
 video::-webkit-media-controls {

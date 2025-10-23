@@ -204,21 +204,8 @@ async function requestCameraPermission() {
     cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
     console.log('✅ Permiso de cámara concedido');
     
-    // Mantener la cámara activa para mostrar el video inmediatamente
-    const video = document.createElement('video');
-    video.id = 'mobile-camera-preview';
-    video.autoplay = true;
-    video.playsInline = true;
-    video.muted = true;
-    video.style.position = 'fixed';
-    video.style.top = '0';
-    video.style.left = '0';
-    video.style.width = '100vw';
-    video.style.height = '100vh';
-    video.style.objectFit = 'cover';
-    video.style.zIndex = '0';
-    video.srcObject = cameraStream;
-    document.body.appendChild(video);
+    // ✅ NO CREAR VIDEO PREVIEW - dejar que AR.js maneje todo
+    // Solo guardamos el stream pero no lo mostramos
     
     return true;
   } catch (error) {
@@ -273,18 +260,10 @@ function initAR() {
 
   // 🔹 Listener: cuando AR.js carga su propio video, reemplaza el preview
   sceneEl.addEventListener('arjs-video-loaded', () => {
-    const preview = document.getElementById('mobile-camera-preview');
-    if (preview) {
-      preview.style.opacity = '0'; // ✅ Primero desvanecer
-      setTimeout(() => preview.remove(), 300); // ✅ Luego eliminar después de la transición
-    }
-
-    // ✅ Señal para que el CSS oculte el preview
-    document.body.classList.add('arjs-active');
-
-    console.log('✅ Video AR.js cargado correctamente');
-    updateDetectionStatus("Cámara activa - Busca un marcador");
-  });
+  document.body.classList.add('arjs-active');
+  console.log('✅ Video AR.js cargado correctamente');
+  updateDetectionStatus("Cámara activa - Busca un marcador");
+});
 
   const baseURL = `${window.location.origin}/AppMindAr/models/`;
 
