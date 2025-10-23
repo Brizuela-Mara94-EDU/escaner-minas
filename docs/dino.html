@@ -204,8 +204,23 @@ async function requestCameraPermission() {
     cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
     console.log('✅ Permiso de cámara concedido');
     
-    // Detener el stream, AR.js creará el suyo
-    cameraStream.getTracks().forEach(track => track.stop());
+    
+    // Mantener la cámara activa para mostrar el video inmediatamente
+    const video = document.createElement('video');
+    video.id = 'mobile-camera-preview';
+    video.autoplay = true;
+    video.playsInline = true;
+    video.muted = true;
+    video.style.position = 'fixed';
+    video.style.top = '0';
+    video.style.left = '0';
+    video.style.width = '100vw';
+    video.style.height = '100vh';
+    video.style.objectFit = 'cover';
+    video.style.zIndex = '0';
+    video.srcObject = cameraStream;
+    document.body.appendChild(video);
+
     
     return true;
   } catch (error) {
@@ -235,9 +250,9 @@ function initAR() {
   if (sceneEl && sceneEl.parentNode) {
     arContainer.removeChild(sceneEl);
   }
-  
+
   sceneEl = document.createElement('a-scene');
-  
+
   const arjsConfig = [
     'sourceType: webcam',
     `sourceWidth: ${isMobile ? 640 : 1280}`,
@@ -252,7 +267,7 @@ function initAR() {
     'maxDetectionRate: 90',
     'cameraParametersUrl: https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/data/data/camera_para.dat'
   ].join('; ');
-  
+
   sceneEl.setAttribute('arjs', arjsConfig);
   sceneEl.setAttribute('renderer', 'logarithmicDepthBuffer: true; colorManagement: true; antialias: true; alpha: true;');
   sceneEl.setAttribute('vr-mode-ui', 'enabled: false');
@@ -260,7 +275,34 @@ function initAR() {
   sceneEl.setAttribute('loading-screen', 'enabled: false');
 
   arContainer.appendChild(sceneEl);
-  
+
+  // ✅ Mostrar cámara inmediatamente mientras carga AR.js
+  const video = document.createElement('video');
+  video.id = 'mobile-camera-preview';
+  video.autoplay = true;
+  video.playsInline = true;
+  video.muted = true;
+  video.style.position = 'fixed';
+  video.style.top = '0';
+  video.style.left = '0';
+  video.style.width = '100vw';
+  video.style.height = '100vh';
+  video.style.objectFit = 'cover';
+  video.style.zIndex = '0';
+  video.style.background = 'black';
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => { video.srcObject = stream; })
+    .catch(err => console.error('❌ Error accediendo a la cámara previa:', err));
+  document.body.appendChild(video);
+
+  // 🔹 Listener: cuando AR.js carga su propio video, reemplaza el preview
+  sceneEl.addEventListener('arjs-video-loaded', () => {
+    const preview = document.getElementById('mobile-camera-preview');
+    if (preview) preview.remove();
+    console.log('✅ Video AR.js cargado correctamente');
+    updateDetectionStatus("Cámara activa - Busca un marcador");
+  });
+
   const baseURL = `${window.location.origin}/AppMindAr/models/`;
 
   const assets = document.createElement('a-assets');
@@ -311,29 +353,29 @@ function initAR() {
   const camera = document.createElement('a-entity');
   camera.setAttribute('camera', '');
   sceneEl.appendChild(camera);
-  
+
   updateDetectionStatus("Iniciando cámara...");
   isModelPlaced = false;
 
   sceneEl.addEventListener('loaded', () => {
     console.log('✅ Escena AR.js cargada');
     updateDetectionStatus("Cámara lista - Apunta al marcador");
-    
+
     const markers = document.querySelectorAll('.dino-marker');
     markers.forEach(marker => {
       marker.addEventListener('markerFound', (event) => {
         if (isModelPlaced) return;
-        
+
         const modelIndex = marker.getAttribute('data-model-index');
         console.log('🦖 Marcador encontrado:', modelIndex);
         updateDetectionStatus(`¡Eureka! Dino ${modelIndex} encontrado!`);
-        
+
         const modelConfig = modelInfo[modelIndex];
         if (!modelConfig) return;
-        
+
         const scaleToUse = isMobile ? modelConfig.scaleMobile : modelConfig.scale;
         const positionToUse = isMobile && modelConfig.positionMobile ? modelConfig.positionMobile : modelConfig.position;
-        
+
         const placedModel = document.createElement('a-entity');
         placedModel.setAttribute('class', 'placed-model');
         placedModel.setAttribute('gltf-model', getModelFile(modelIndex));
@@ -341,39 +383,39 @@ function initAR() {
         placedModel.setAttribute('data-base-scale', scaleToUse);
         placedModel.setAttribute('rotation', modelConfig.rotation);
         placedModel.setAttribute('animation-mixer', '');
-        
+
         const camera = document.querySelector('a-entity[camera]');
         placedModel.setAttribute('position', positionToUse);
         camera.appendChild(placedModel);
-        
+
         isModelPlaced = true;
         currentScale = 1;
-        
+
         setupInteractiveControls(placedModel);
-        
+
         if (scanningUI) scanningUI.classList.add("hidden");
         if (restartButton) restartButton.classList.remove("hidden");
-        
+
         showInfoButton();
-        
+
         const info = modelInfo[modelIndex];
         if (info) {
           document.getElementById('dino-name').textContent = `${info.emoji} ${info.name}`;
           document.getElementById('dino-description').textContent = info.description;
-          
+
           if (!isMobile) {
             dinoInfoPanel.classList.remove('hidden');
           }
         }
-        
+
         try {
           roarAudio.currentTime = 0;
           roarAudio.play().catch(e => console.log('Error al reproducir audio:', e));
-        } catch(e) {
+        } catch (e) {
           console.log('Error con audio:', e);
         }
       });
-      
+
       marker.addEventListener('markerLost', () => {
         const modelIndex = marker.getAttribute('data-model-index');
         console.log('Marcador perdido:', modelIndex);
@@ -385,12 +427,13 @@ function initAR() {
     console.log('✅ Renderizado AR iniciado - Cámara activa');
     updateDetectionStatus("Cámara activa - Busca un marcador");
   });
-  
+
   sceneEl.addEventListener('camera-error', (error) => {
     console.error('❌ Error de cámara AR.js:', error);
     updateDetectionStatus("Error: No se puede acceder a la cámara");
   });
 }
+
 
 function setupInteractiveControls(model) {
   currentModel = model;
