@@ -988,9 +988,9 @@
 
         let url;
         if (selectedMode === 'mindar') {
-          url = `arjs/scanner.html?marker=${m.arMarker}&name=${encodeURIComponent(m.name)}`;
+          url = `scanner.html?marker=${m.arMarker}&name=${encodeURIComponent(m.name)}`;
         } else if (selectedMode === 'arjs') {
-          url = `arjs/arjs-scanner.html?marker=${m.arMarker}&name=${encodeURIComponent(m.name)}`;
+          url = `arjs-scanner.html?marker=${m.arMarker}&name=${encodeURIComponent(m.name)}`;
         }
         
         window.location.href = url;
