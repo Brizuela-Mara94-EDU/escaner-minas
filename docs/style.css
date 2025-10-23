@@ -279,7 +279,7 @@ body, html {
   width: 100vw;
   height: 100vh;
   z-index: 1;
-  background: #e8dcc4;
+  background: transparent !important; /* ✅ dejar pasar la cámara */
 }
 
 a-scene {
