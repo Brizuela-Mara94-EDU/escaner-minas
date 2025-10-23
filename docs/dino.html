@@ -443,9 +443,8 @@
       `debugUIEnabled: false`,
       `minConfidence: 0.15`,
       `maxDetectionRate: 90`,
-      `canvasWidth: ${isMobile ? 480 : 640}`,
-      `canvasHeight: ${isMobile ? 360 : 480}`,
-      `cameraParametersUrl: https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/data/data/camera_para.dat`
+      `cameraParametersUrl: https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/data/data/camera_para.dat`,
+      `showVideoBackground: true`  // 🔹 esta línea activa la cámara en vivo
     ].join('; ');
     
     sceneEl.setAttribute('arjs', arjsConfig);
