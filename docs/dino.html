@@ -98,9 +98,9 @@
 startButton.addEventListener("click", () => {
   document.querySelector(".ui-overlay").style.display = "none";
 
-  // Arma una URL absoluta correcta basada en el path actual
-  const base = window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/"));
-  const url = `${base}/arjs-dino.html`;
+  // Detecta automáticamente si estás dentro de GitHub Pages y crea la ruta correcta
+  const repoName = "AppMindAr"; // 👈 tu repositorio
+  const url = `${window.location.origin}/${repoName}/arjs-dino.html`;
 
   console.log("➡️ Redirigiendo a:", url);
   window.location.href = url;
