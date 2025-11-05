@@ -54,86 +54,198 @@
   <div id="control-hints">🖐 Arrastra para girar · 📱 Pellizca para zoom</div>
 
   <script>
-    const scene=document.getElementById('scene'),
-          overlay=document.getElementById('overlay'),
-          header=document.getElementById('header'),
-          scanner=document.getElementById('scanner'),
-          info=document.getElementById('modelInfo'),
-          nameEl=document.getElementById('modelName'),
-          subEl=document.getElementById('modelSubtitle'),
-          dinoPanel=document.getElementById('dino-info-panel'),
-          title=document.getElementById('dino-title'),
-          desc=document.getElementById('dino-desc'),
-          btnSound=document.getElementById('play-sound-btn'),
-          btnPhoto=document.getElementById('take-photo-btn'),
-          btnClose=document.getElementById('close-info-btn'),
-          btnRestart=document.getElementById('restart-button'),
-          hints=document.getElementById('control-hints'),
-          roarAudio=new Audio('/AppMindAr/sounds/roar.mp3');
+  // --- refs UI & audio ---
+  const scene = document.getElementById('scene');
+  const overlay = document.getElementById('overlay');
+  const header  = document.getElementById('header');
+  const scanner = document.getElementById('scanner');
 
-    const data={0:{emoji:"🦕",name:"Brachiosaurus",desc:"Gigante herbívoro de cuello largo."},1:{emoji:"🦖",name:"Tyrannosaurus Rex",desc:"El rey de los depredadores."},2:{emoji:"🦏",name:"Triceratops",desc:"Herbívoro con tres cuernos."},3:{emoji:"🦎",name:"Velociraptor",desc:"Cazador inteligente y ágil."},4:{emoji:"🦕",name:"Stegosaurio",desc:"Herbívoro jurásico con placas óseas."},5:{emoji:"🛡️",name:"Anquilosaurio",desc:"El tanque viviente del Cretácico."}};
-    let lockedMarker=null,currentModel=null,arSystem=null;
+  const infoBox = document.getElementById('modelInfo');
+  const nameEl  = document.getElementById('modelName');
+  const subEl   = document.getElementById('modelSubtitle');
 
-    document.body.addEventListener('touchstart',()=>{roarAudio.play().then(()=>roarAudio.pause()).catch(()=>{});},{once:true});
-    document.getElementById('closeBtn').onclick=()=>window.history.back();
+  const panel   = document.getElementById('dino-info-panel');
+  const titleEl = document.getElementById('dino-title');
+  const descEl  = document.getElementById('dino-desc');
 
-    scene.addEventListener('loaded',()=>{arSystem=scene.systems["arjs"];});
+  const btnSound   = document.getElementById('play-sound-btn');
+  const btnPhoto   = document.getElementById('take-photo-btn');
+  const btnClose   = document.getElementById('close-info-btn');
+  const btnRestart = document.getElementById('restart-button');
+  const hints      = document.getElementById('control-hints');
 
-    function hideUI(){overlay.style.display='none';header.style.display='none';scanner.style.display='none';}
-    function showUI(){overlay.style.display='';header.style.display='';scanner.style.display='';}
-    function showHints(){hints.classList.add('visible');setTimeout(()=>hints.classList.remove('visible'),5000);}
+  const roarAudio = new Audio('/AppMindAr/sounds/roar.mp3');
+  document.body.addEventListener('touchstart', () => {
+    // primer para permitir auto-play luego
+    roarAudio.play().then(()=>roarAudio.pause()).catch(()=>{});
+  }, { once:true });
 
-    [0,1,2,3,4,5].forEach(i=>{
-      const marker=document.getElementById('marker'+i);
-      const model=document.getElementById('model'+i);
-      marker.addEventListener('markerFound',()=>{
-        if(lockedMarker!==null)return;
-        lockedMarker=i;
-        hideUI();
+  document.getElementById('closeBtn').onclick = () => window.history.back();
 
-        const clone=model.cloneNode(true);
+  // --- data ---
+  const DATA = {
+    0:{emoji:"🦕",name:"Brachiosaurus",desc:"Gigante herbívoro de cuello largo."},
+    1:{emoji:"🦖",name:"Tyrannosaurus Rex",desc:"El rey de los depredadores."},
+    2:{emoji:"🦏",name:"Triceratops",desc:"Herbívoro con tres cuernos."},
+    3:{emoji:"🦎",name:"Velociraptor",desc:"Cazador inteligente y ágil."},
+    4:{emoji:"🦕",name:"Stegosaurio",desc:"Herbívoro jurásico con placas óseas."},
+    5:{emoji:"🛡️",name:"Anquilosaurio",desc:"El tanque viviente del Cretácico."}
+  };
+
+  // --- estado ---
+  let locked = false;           // ya fijamos un modelo
+  let fixedModel = null;        // el clone fijo en la escena
+  let markersSnapshot = '';     // HTML de todos los <a-marker> para reconstruir
+  let arSystem = null;
+
+  // Guardamos el HTML original de todos los markers para poder “volver a crearlos” después
+  function snapshotMarkers() {
+    const markers = [...scene.querySelectorAll('a-marker')];
+    markersSnapshot = markers.map(m => m.outerHTML).join('\n');
+  }
+
+  // Remueve TODOS los markers del DOM (así no pueden renderear nada detrás)
+  function removeAllMarkers() {
+    scene.querySelectorAll('a-marker').forEach(m => m.remove());
+  }
+
+  // Reconstruye los markers desde el snapshot y vuelve a cablear los eventos
+  function restoreMarkersAndWire() {
+    if (!markersSnapshot) return;
+    // Insertamos antes de la cámara para mantener el orden
+    const cam = scene.querySelector('[camera]') || scene.lastElementChild;
+    const container = document.createElement('a-entity');
+    container.innerHTML = markersSnapshot;
+    const newMarkers = [...container.children];
+    newMarkers.forEach(n => scene.insertBefore(n, cam));
+    wireMarkerEvents(); // re-cablear listeners
+  }
+
+  // Cablea eventos markerFound/markerLost a todos los markers actuales
+  function wireMarkerEvents() {
+    [0,1,2,3,4,5].forEach(i => {
+      const marker = scene.querySelector(`#marker${i}`);
+      const model  = scene.querySelector(`#model${i}`);
+      if (!marker || !model) return;
+
+      // por si AR.js fuerza visibilidad: ocultamos hijos cuando bloqueemos
+      marker.__onFound && marker.removeEventListener('markerFound', marker.__onFound);
+      marker.__onLost  && marker.removeEventListener('markerLost',  marker.__onLost);
+
+      marker.__onFound = () => {
+        if (locked) return; // ya fijamos uno, ignorar
+        locked = true;
+
+        // UI fuera
+        overlay.style.display='none';
+        header.style.display='none';
+        scanner.style.display='none';
+
+        // Clon fijo que NO depende del marker
+        const clone = model.cloneNode(true);
+        // Copiamos transform del object3D (posición/rotación/escala actuales)
         clone.object3D.position.copy(model.object3D.position);
-        clone.object3D.rotation.copy(model.object3D.rotation);
+        clone.object3D.quaternion.copy(model.object3D.quaternion);
+        clone.object3D.scale.copy(model.object3D.scale);
+        // Lo agregamos directo a la escena (no como hijo del marker)
         scene.appendChild(clone);
-        currentModel=clone;
+        fixedModel = clone;
 
-        nameEl.textContent=`${data[i].emoji} ${data[i].name}`;
-        subEl.textContent=data[i].desc;
-        info.classList.add('active');
-        title.textContent=nameEl.textContent;
-        desc.textContent=subEl.textContent;
-        dinoPanel.style.display='block';
-        btnRestart.style.display='block';
+        // Info + sonido
+        const info = DATA[i];
+        nameEl.textContent = `${info.emoji} ${info.name}`;
+        subEl.textContent  = info.desc;
+        infoBox.classList.add('active');
+
+        titleEl.textContent = nameEl.textContent;
+        descEl.textContent  = subEl.textContent;
+        panel.style.display = 'block';
+        btnRestart.style.display = 'block';
         showHints();
 
-        roarAudio.currentTime=0;
+        roarAudio.currentTime = 0;
         roarAudio.play().catch(()=>{});
 
-        // 🔒 Desactivar tracking (pausa total)
-        if(arSystem && arSystem._arSession && arSystem._arSession.arSource){
-          arSystem._arSession.arSource.stop();
+        // 🔴 clave: eliminar todos los markers del DOM
+        removeAllMarkers();
+
+        // Opcional extra: pausar la fuente de AR para ahorrar batería
+        if (!arSystem) arSystem = scene.systems['arjs'];
+        if (arSystem && arSystem._arSession && arSystem._arSession.arSource) {
+          try { arSystem._arSession.arSource.stop(); } catch {}
         }
-      });
+      };
+
+      marker.__onLost = () => {
+        // Mientras no esté bloqueado, mostramos/ocultamos el cartel
+        if (!locked) infoBox.classList.remove('active');
+      };
+
+      marker.addEventListener('markerFound', marker.__onFound);
+      marker.addEventListener('markerLost',  marker.__onLost);
     });
+  }
 
-    btnSound.onclick=()=>{roarAudio.currentTime=0;roarAudio.play().catch(()=>{});};
-    btnClose.onclick=()=>{dinoPanel.style.display='none';};
-    btnPhoto.onclick=()=>{
-      if(!scene.components||!scene.components.screenshot)scene.setAttribute('screenshot','width:1920;height:1080');
-      const c=scene.components.screenshot?.getCanvas('perspective');if(!c){alert('⚠️ No se pudo capturar la imagen.');return;}
-      const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='captura_dino.png';document.body.appendChild(a);a.click();a.remove();
-    };
+  // Hints
+  function showHints(){
+    hints.classList.add('visible');
+    setTimeout(()=>hints.classList.remove('visible'), 5000);
+  }
 
-    btnRestart.onclick=()=>{
-      if(currentModel)currentModel.remove();
-      lockedMarker=null;currentModel=null;
-      info.classList.remove('active');dinoPanel.style.display='none';btnRestart.style.display='none';roarAudio.pause();showUI();
+  // Reescanear
+  btnRestart.onclick = () => {
+    // Eliminar modelo fijo si existiera
+    if (fixedModel) { fixedModel.remove(); fixedModel = null; }
+    locked = false;
+    roarAudio.pause();
 
-      // 🔁 Reactivar tracking
-      if(arSystem && arSystem._arSession && arSystem._arSession.arSource){
-        arSystem._arSession.arSource.start();
-      }
-    };
-  </script>
+    // Restaurar UI de escaneo
+    overlay.style.display='';
+    header.style.display='';
+    scanner.style.display='';
+
+    infoBox.classList.remove('active');
+    panel.style.display='none';
+    btnRestart.style.display='none';
+
+    // Reactivar fuente AR y reconstruir markers
+    if (!arSystem) arSystem = scene.systems['arjs'];
+    if (arSystem && arSystem._arSession && arSystem._arSession.arSource) {
+      try { arSystem._arSession.arSource.start(); } catch {}
+    }
+    restoreMarkersAndWire();
+  };
+
+  // Controles del panel
+  btnSound.onclick = () => { roarAudio.currentTime=0; roarAudio.play().catch(()=>{}); };
+  btnClose.onclick = () => { panel.style.display='none'; };
+  btnPhoto.onclick = () => {
+    if (!scene.components || !scene.components.screenshot) {
+      scene.setAttribute('screenshot','width:1920;height:1080');
+    }
+    const canvas = scene.components.screenshot?.getCanvas('perspective');
+    if (!canvas) { alert('⚠️ No se pudo capturar la imagen.'); return; }
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = 'captura_dino.png';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+
+  // Ajustes visuales al cargar video AR
+  scene.addEventListener('arjs-video-loaded', () => {
+    const vid = document.querySelector('video');
+    const cvs = document.querySelector('.a-canvas');
+    if (vid) {
+      vid.setAttribute('playsinline','');
+      Object.assign(vid.style, { position:'fixed', top:0, left:0, width:'100vw', height:'100vh', objectFit:'cover', zIndex:-1 });
+    }
+    if (cvs) Object.assign(cvs.style, { position:'fixed', top:0, left:0, width:'100vw', height:'100vh' });
+  });
+
+  // Boot: snapshot + wire
+  snapshotMarkers();
+  wireMarkerEvents();
+</script>
+
 </body>
 </html>
