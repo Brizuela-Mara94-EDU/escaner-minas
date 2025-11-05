@@ -110,75 +110,131 @@
   <div id="control-hints">🖐 Arrastra para girar<br>📱 Pellizca para zoom</div>
 
   <script>
-  const roarAudio=new Audio('/AppMindAr/sounds/roar.mp3');
-  const isMobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
-  const scene=document.getElementById('scene'),info=document.getElementById('modelInfo'),
-        nameEl=document.getElementById('modelName'),subEl=document.getElementById('modelSubtitle'),
-        dinoInfo=document.getElementById('dino-info-panel'),title=document.getElementById('dino-title'),
-        desc=document.getElementById('dino-desc'),btnSound=document.getElementById('play-sound-btn'),
-        btnPhoto=document.getElementById('take-photo-btn'),btnClose=document.getElementById('close-info-btn'),
-        btnRestart=document.getElementById('restart-button'),hints=document.getElementById('control-hints');
-  let lockedMarker=null,currentModel=null,infoVisible=false;
+const roarAudio = new Audio('/AppMindAr/sounds/roar.mp3');
+const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+const scene = document.getElementById('scene'),
+      info = document.getElementById('modelInfo'),
+      nameEl = document.getElementById('modelName'),
+      subEl = document.getElementById('modelSubtitle'),
+      dinoInfo = document.getElementById('dino-info-panel'),
+      title = document.getElementById('dino-title'),
+      desc = document.getElementById('dino-desc'),
+      btnSound = document.getElementById('play-sound-btn'),
+      btnPhoto = document.getElementById('take-photo-btn'),
+      btnClose = document.getElementById('close-info-btn'),
+      btnRestart = document.getElementById('restart-button'),
+      hints = document.getElementById('control-hints');
+const overlay = document.querySelector('.overlay');
+const frame = document.querySelector('.scanner-frame');
+const scanLine = document.querySelector('.scan-line');
 
-  const data={0:{emoji:"🦕",name:"Brachiosaurus",desc:"Gigante herbívoro de cuello largo."},1:{emoji:"🦖",name:"Tyrannosaurus Rex",desc:"El rey de los depredadores."},2:{emoji:"🦏",name:"Triceratops",desc:"Herbívoro con tres cuernos."},3:{emoji:"🦎",name:"Velociraptor",desc:"Cazador inteligente y ágil."},4:{emoji:"🦕",name:"Stegosaurio",desc:"Herbívoro jurásico con placas óseas."},5:{emoji:"🛡️",name:"Anquilosaurio",desc:"El tanque viviente del Cretácico."}};
+let lockedMarker = null, currentModel = null, infoVisible = false;
 
-  document.getElementById('closeBtn').addEventListener('click',()=>window.history.back());
+const data = {
+  0: { emoji:"🦕",name:"Brachiosaurus",desc:"Gigante herbívoro de cuello largo." },
+  1: { emoji:"🦖",name:"Tyrannosaurus Rex",desc:"El rey de los depredadores." },
+  2: { emoji:"🦏",name:"Triceratops",desc:"Herbívoro con tres cuernos." },
+  3: { emoji:"🦎",name:"Velociraptor",desc:"Cazador inteligente y ágil." },
+  4: { emoji:"🦕",name:"Stegosaurio",desc:"Herbívoro jurásico con placas óseas." },
+  5: { emoji:"🛡️",name:"Anquilosaurio",desc:"El tanque viviente del Cretácico." }
+};
 
-  scene.addEventListener('arjs-video-loaded',()=>{
-    const vid=document.querySelector('video');const cvs=document.querySelector('.a-canvas');
-    if(vid){vid.setAttribute('playsinline','');Object.assign(vid.style,{position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh',objectFit:'cover',zIndex:-1});}
-    if(cvs)Object.assign(cvs.style,{position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh'});
-    if(scene.camera){scene.camera.fov=isMobile?72:60;scene.camera.updateProjectionMatrix();}
+document.getElementById('closeBtn').addEventListener('click', () => window.history.back());
+
+scene.addEventListener('arjs-video-loaded', () => {
+  const vid = document.querySelector('video');
+  const cvs = document.querySelector('.a-canvas');
+  if (vid) {
+    vid.setAttribute('playsinline', '');
+    Object.assign(vid.style, { position:'fixed', top:0, left:0, width:'100vw', height:'100vh', objectFit:'cover', zIndex:-1 });
+  }
+  if (cvs) Object.assign(cvs.style, { position:'fixed', top:0, left:0, width:'100vw', height:'100vh' });
+  if (scene.camera) { scene.camera.fov = isMobile ? 72 : 60; scene.camera.updateProjectionMatrix(); }
+});
+
+[0,1,2,3,4,5].forEach(i=>{
+  const m = document.getElementById('marker'+i),
+        e = document.getElementById('model'+i);
+  if (!m || !e) return;
+
+  m.addEventListener('markerFound', () => {
+    if (lockedMarker !== null && lockedMarker !== i) return;
+    if (lockedMarker === null) lockedMarker = i;
+
+    // 🔹 Ocultar interfaz de escaneo
+    overlay.style.display = 'none';
+    frame.style.display = 'none';
+    scanLine.style.display = 'none';
+
+    const inf = data[i];
+    nameEl.textContent = `${inf.emoji} ${inf.name}`;
+    subEl.textContent = inf.desc;
+    info.classList.add('active');
+
+    title.textContent = `${inf.emoji} ${inf.name}`;
+    desc.textContent = inf.desc;
+
+    dinoInfo.style.display = 'block';
+    infoVisible = true;
+    btnRestart.style.display = 'block';
+    currentModel = e;
+
+    roarAudio.currentTime = 0;
+    roarAudio.play().catch(()=>{});
+    showHints();
   });
 
-  [0,1,2,3,4,5].forEach(i=>{
-    const m=document.getElementById('marker'+i),e=document.getElementById('model'+i);
-    if(!m||!e)return;
-    m.addEventListener('markerFound',()=>{
-      if(lockedMarker!==null&&lockedMarker!==i)return;
-      if(lockedMarker===null)lockedMarker=i;
-      const inf=data[i];
-      nameEl.textContent=`${inf.emoji} ${inf.name}`;subEl.textContent=inf.desc;info.classList.add('active');
-      title.textContent=`${inf.emoji} ${inf.name}`;desc.textContent=inf.desc;
-      dinoInfo.style.display='block';infoVisible=true;btnRestart.style.display='block';
-      currentModel=e;roarAudio.currentTime=0;roarAudio.play().catch(()=>{});
-      showHints();
-    });
-    m.addEventListener('markerLost',()=>info.classList.remove('active'));
+  m.addEventListener('markerLost', () => {
+    info.classList.remove('active');
   });
+});
 
-  btnSound.onclick=()=>{roarAudio.currentTime=0;roarAudio.play().catch(()=>{});};
-  btnClose.onclick=()=>{dinoInfo.style.display='none';infoVisible=false;};
-  btnPhoto.onclick=()=>{
-    const comp=scene.components&&scene.components.screenshot;
-    if(!comp)scene.setAttribute('screenshot','width:1920;height:1080');
-    const canvas=scene.components.screenshot?.getCanvas('perspective');
-    if(!canvas){alert('⚠️ No se pudo capturar la imagen.');return;}
-    const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='captura_dino.png';
-    document.body.appendChild(a);a.click();a.remove();
-  };
-  btnRestart.onclick=()=>{
-    lockedMarker=null;currentModel=null;dinoInfo.style.display='none';infoVisible=false;
-    info.classList.remove('active');btnRestart.style.display='none';roarAudio.pause();
-  };
+// --- Botones del panel ---
+btnSound.onclick = () => { roarAudio.currentTime = 0; roarAudio.play().catch(()=>{}); };
+btnClose.onclick = () => { dinoInfo.style.display = 'none'; infoVisible = false; };
+btnPhoto.onclick = () => {
+  const comp = scene.components && scene.components.screenshot;
+  if (!comp) scene.setAttribute('screenshot', 'width:1920;height:1080');
+  const canvas = scene.components.screenshot?.getCanvas('perspective');
+  if (!canvas) { alert('⚠️ No se pudo capturar la imagen.'); return; }
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'captura_dino.png';
+  document.body.appendChild(a); a.click(); a.remove();
+};
 
-  // --- Control táctil / mouse ---
-  let isRotating=false,lastX=0,lastY=0,rotY=0,rotX=0,velY=0,velX=0,scale=1,pinch=0,baseScale=1,touches=[];
-  const getM=()=>currentModel;
-  function upd(){const m=getM();if(!m)return;m.setAttribute('rotation',`${rotX} ${rotY} 0`);m.setAttribute('scale',`${scale} ${scale} ${scale}`);}
-  function inertia(){const m=getM();if(m&&!isRotating){velY*=0.95;velX*=0.95;if(Math.abs(velY)>0.1||Math.abs(velX)>0.1){rotY+=velY;rotX-=velX;rotX=Math.max(-45,Math.min(45,rotX));upd();}}requestAnimationFrame(inertia);}inertia();
-  document.addEventListener('touchstart',e=>{if(!currentModel)return;touches=[...e.touches];if(touches.length===1){isRotating=true;lastX=touches[0].clientX;lastY=touches[0].clientY;velX=velY=0;}else if(touches.length===2){e.preventDefault();pinch=dist(touches);baseScale=scale;}},{passive:false});
-  document.addEventListener('touchmove',e=>{if(!currentModel)return;touches=[...e.touches];if(touches.length===1&&isRotating){const dx=touches[0].clientX-lastX,dy=touches[0].clientY-lastY;velY=dx*0.5;velX=dy*0.3;rotY+=velY;rotX-=velX;rotX=Math.max(-45,Math.min(45,rotX));upd();lastX=touches[0].clientX;lastY=touches[0].clientY;}else if(touches.length===2){e.preventDefault();const p=dist(touches);const ch=p/pinch;scale=Math.max(0.3,Math.min(2.5,baseScale*ch));upd();}},{passive:false});
-  document.addEventListener('touchend',e=>{if(e.touches.length===0)isRotating=false;if(e.touches.length<2)pinch=0;});
-  document.addEventListener('mousedown',e=>{if(!currentModel||e.target.closest('button'))return;isRotating=true;lastX=e.clientX;lastY=e.clientY;e.preventDefault();});
-  document.addEventListener('mousemove',e=>{if(!isRotating)return;const m=getM();if(!m)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;velY=dx*0.5;velX=dy*0.3;rotY+=velY;rotX-=velX;rotX=Math.max(-45,Math.min(45,rotX));upd();lastX=e.clientX;lastY=e.clientY;});
-  document.addEventListener('mouseup',()=>isRotating=false);
-  document.addEventListener('wheel',e=>{if(!currentModel)return;e.preventDefault();const d=e.deltaY*-0.001;scale=Math.max(0.3,Math.min(2.5,scale+d));upd();},{passive:false});
-  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
-  btnRestart.addEventListener('click',()=>{scale=1;rotX=rotY=0;upd();});
+// --- Reescanear ---
+btnRestart.onclick = () => {
+  lockedMarker = null; currentModel = null; infoVisible = false;
+  dinoInfo.style.display = 'none';
+  info.classList.remove('active');
+  btnRestart.style.display = 'none';
+  roarAudio.pause();
+  // 🔹 Reactivar interfaz de escaneo
+  overlay.style.display = 'block';
+  frame.style.display = 'block';
+  scanLine.style.display = 'block';
+  scale = 1; rotX = rotY = 0; upd();
+};
 
-  // --- Hints ---
-  function showHints(){hints.classList.add('visible');setTimeout(()=>hints.classList.remove('visible'),5000);}
-  </script>
+// --- Control táctil / mouse ---
+let isRotating=false,lastX=0,lastY=0,rotY=0,rotX=0,velY=0,velX=0,scale=1,pinch=0,baseScale=1,touches=[];
+const getM=()=>currentModel;
+function upd(){const m=getM();if(!m)return;m.setAttribute('rotation',`${rotX} ${rotY} 0`);m.setAttribute('scale',`${scale} ${scale} ${scale}`);}
+function inertia(){const m=getM();if(m&&!isRotating){velY*=0.95;velX*=0.95;if(Math.abs(velY)>0.1||Math.abs(velX)>0.1){rotY+=velY;rotX-=velX;rotX=Math.max(-45,Math.min(45,rotX));upd();}}requestAnimationFrame(inertia);}inertia();
+document.addEventListener('touchstart',e=>{if(!currentModel)return;touches=[...e.touches];if(touches.length===1){isRotating=true;lastX=touches[0].clientX;lastY=touches[0].clientY;velX=velY=0;}else if(touches.length===2){e.preventDefault();pinch=dist(touches);baseScale=scale;}},{passive:false});
+document.addEventListener('touchmove',e=>{if(!currentModel)return;touches=[...e.touches];if(touches.length===1&&isRotating){const dx=touches[0].clientX-lastX,dy=touches[0].clientY-lastY;velY=dx*0.5;velX=dy*0.3;rotY+=velY;rotX-=velX;rotX=Math.max(-45,Math.min(45,rotX));upd();lastX=touches[0].clientX;lastY=touches[0].clientY;}else if(touches.length===2){e.preventDefault();const p=dist(touches);const ch=p/pinch;scale=Math.max(0.3,Math.min(2.5,baseScale*ch));upd();}},{passive:false});
+document.addEventListener('touchend',e=>{if(e.touches.length===0)isRotating=false;if(e.touches.length<2)pinch=0;});
+document.addEventListener('mousedown',e=>{if(!currentModel||e.target.closest('button'))return;isRotating=true;lastX=e.clientX;lastY=e.clientY;e.preventDefault();});
+document.addEventListener('mousemove',e=>{if(!isRotating)return;const m=getM();if(!m)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;velY=dx*0.5;velX=dy*0.3;rotY+=velY;rotX-=velX;rotX=Math.max(-45,Math.min(45,rotX));upd();lastX=e.clientX;lastY=e.clientY;});
+document.addEventListener('mouseup',()=>isRotating=false);
+document.addEventListener('wheel',e=>{if(!currentModel)return;e.preventDefault();const d=e.deltaY*-0.001;scale=Math.max(0.3,Math.min(2.5,scale+d));upd();},{passive:false});
+const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+btnRestart.addEventListener('click',()=>{scale=1;rotX=rotY=0;upd();});
+
+// --- Hints ---
+function showHints(){hints.classList.add('visible');setTimeout(()=>hints.classList.remove('visible'),5000);}
+</script>
+
 </body>
 </html>
