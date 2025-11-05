@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>Experiencia AR - Dinos (Escáner)</title>
+  <title>Experiencia AR - Dinos (Congelado al detectar)</title>
 
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.4/aframe/build/aframe-ar.js"></script>
@@ -27,18 +27,18 @@
     #restart-button{position:fixed;right:16px;bottom:24px;z-index:30;width:52px;height:52px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:22px;cursor:pointer;display:none}
     #control-hints{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);text-align:center;color:#fff;font-size:14px;background:rgba(0,0,0,.6);padding:6px 14px;border-radius:8px;opacity:0;transition:opacity .4s;z-index:25}
     #control-hints.visible{opacity:1}
-    #arjs-video{position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;z-index:-1!important}
-    .a-canvas{position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;z-index:0!important}
   </style>
 </head>
 <body>
   <div class="overlay" id="overlay"></div>
-  <div class="header" id="header"><div style="font-weight:700;font-size:18px;">Experiencia AR</div><button class="close-btn" id="closeBtn">✕</button></div>
+  <div class="header" id="header">
+    <div style="font-weight:700;font-size:18px;">Experiencia AR</div>
+    <button class="close-btn" id="closeBtn">✕</button>
+  </div>
   <div class="scanner-frame" id="scanner"><div class="scan-line"></div></div>
 
   <a-scene id="scene" embedded vr-mode-ui="enabled:false"
-    arjs="sourceType:webcam;facingMode:environment;detectionMode:mono_and_matrix;matrixCodeType:3x3;debugUIEnabled:false;maxDetectionRate:15;minConfidence:0.05;sourceWidth:1280;sourceHeight:720;displayWidth:1280;displayHeight:720;"
-    renderer="logarithmicDepthBuffer:true;precision:mediump;antialias:true;">
+    arjs="sourceType:webcam;facingMode:environment;detectionMode:mono_and_matrix;matrixCodeType:3x3;debugUIEnabled:false;maxDetectionRate:15;minConfidence:0.05;">
     <a-marker id="marker0" type="barcode" value="0" emitevents="true"><a-entity id="model0" gltf-model="/AppMindAr/models/brachiosaurus.glb" scale="0.0975 0.0975 0.075" position="0 -0.62 -1.75" rotation="0 300 0"></a-entity></a-marker>
     <a-marker id="marker1" type="barcode" value="1" emitevents="true"><a-entity id="model1" gltf-model="/AppMindAr/models/trex.glb" scale="0.225 0.225 0.225" position="0 -0.4 -1.7" rotation="0 90 0"></a-entity></a-marker>
     <a-marker id="marker2" type="barcode" value="2" emitevents="true"><a-entity id="model2" gltf-model="/AppMindAr/models/triceratops.glb" scale="1.5 1.5 1.125" position="0 -0.1 -1.5" rotation="0 45 0"></a-entity></a-marker>
@@ -49,61 +49,70 @@
   </a-scene>
 
   <div class="model-info" id="modelInfo"><div class="model-name" id="modelName">Dino</div><div class="model-subtitle" id="modelSubtitle">Descripción</div></div>
-
   <div id="dino-info-panel"><div id="dino-title" style="font-weight:700">Dino</div><div id="dino-desc" style="font-size:12px;opacity:.9">Descripción</div><div style="margin-top:10px;display:flex;gap:8px;justify-content:center;"><button id="play-sound-btn">🔊 Sonido</button><button id="take-photo-btn">📸 Foto</button><button id="close-info-btn">✕</button></div></div>
   <button id="restart-button">🔄</button>
   <div id="control-hints">🖐 Arrastra para girar · 📱 Pellizca para zoom</div>
 
   <script>
     const scene=document.getElementById('scene'),
-    overlay=document.getElementById('overlay'),
-    header=document.getElementById('header'),
-    scanner=document.getElementById('scanner'),
-    info=document.getElementById('modelInfo'),
-    nameEl=document.getElementById('modelName'),
-    subEl=document.getElementById('modelSubtitle'),
-    dinoPanel=document.getElementById('dino-info-panel'),
-    title=document.getElementById('dino-title'),
-    desc=document.getElementById('dino-desc'),
-    btnSound=document.getElementById('play-sound-btn'),
-    btnPhoto=document.getElementById('take-photo-btn'),
-    btnClose=document.getElementById('close-info-btn'),
-    btnRestart=document.getElementById('restart-button'),
-    hints=document.getElementById('control-hints'),
-    roarAudio=new Audio('/AppMindAr/sounds/roar.mp3'),
-    isMobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
+          overlay=document.getElementById('overlay'),
+          header=document.getElementById('header'),
+          scanner=document.getElementById('scanner'),
+          info=document.getElementById('modelInfo'),
+          nameEl=document.getElementById('modelName'),
+          subEl=document.getElementById('modelSubtitle'),
+          dinoPanel=document.getElementById('dino-info-panel'),
+          title=document.getElementById('dino-title'),
+          desc=document.getElementById('dino-desc'),
+          btnSound=document.getElementById('play-sound-btn'),
+          btnPhoto=document.getElementById('take-photo-btn'),
+          btnClose=document.getElementById('close-info-btn'),
+          btnRestart=document.getElementById('restart-button'),
+          hints=document.getElementById('control-hints'),
+          roarAudio=new Audio('/AppMindAr/sounds/roar.mp3');
 
     const data={0:{emoji:"🦕",name:"Brachiosaurus",desc:"Gigante herbívoro de cuello largo."},1:{emoji:"🦖",name:"Tyrannosaurus Rex",desc:"El rey de los depredadores."},2:{emoji:"🦏",name:"Triceratops",desc:"Herbívoro con tres cuernos."},3:{emoji:"🦎",name:"Velociraptor",desc:"Cazador inteligente y ágil."},4:{emoji:"🦕",name:"Stegosaurio",desc:"Herbívoro jurásico con placas óseas."},5:{emoji:"🛡️",name:"Anquilosaurio",desc:"El tanque viviente del Cretácico."}};
-    let lockedMarker=null,currentModel=null;
+    let lockedMarker=null,currentModel=null,arSystem=null;
 
-    // Desbloquear audio en la primera interacción
     document.body.addEventListener('touchstart',()=>{roarAudio.play().then(()=>roarAudio.pause()).catch(()=>{});},{once:true});
-
     document.getElementById('closeBtn').onclick=()=>window.history.back();
-    scene.addEventListener('arjs-video-loaded',()=>{
-      const vid=document.querySelector('video');if(vid){vid.setAttribute('playsinline','');Object.assign(vid.style,{position:'fixed',top:'0',left:'0',width:'100vw',height:'100vh',objectFit:'cover',zIndex:-1});}
-      if(scene.camera){scene.camera.fov=isMobile?72:60;scene.camera.updateProjectionMatrix();}
-    });
+
+    scene.addEventListener('loaded',()=>{arSystem=scene.systems["arjs"];});
 
     function hideUI(){overlay.style.display='none';header.style.display='none';scanner.style.display='none';}
     function showUI(){overlay.style.display='';header.style.display='';scanner.style.display='';}
     function showHints(){hints.classList.add('visible');setTimeout(()=>hints.classList.remove('visible'),5000);}
 
     [0,1,2,3,4,5].forEach(i=>{
-      const m=document.getElementById('marker'+i),e=document.getElementById('model'+i);
-      if(!m||!e)return;
-      m.addEventListener('markerFound',()=>{
+      const marker=document.getElementById('marker'+i);
+      const model=document.getElementById('model'+i);
+      marker.addEventListener('markerFound',()=>{
         if(lockedMarker!==null)return;
         lockedMarker=i;
         hideUI();
-        const clone=e.cloneNode(true);
+
+        const clone=model.cloneNode(true);
+        clone.object3D.position.copy(model.object3D.position);
+        clone.object3D.rotation.copy(model.object3D.rotation);
         scene.appendChild(clone);
         currentModel=clone;
-        const inf=data[i];
-        nameEl.textContent=`${inf.emoji} ${inf.name}`;subEl.textContent=inf.desc;info.classList.add('active');
-        title.textContent=`${inf.emoji} ${inf.name}`;desc.textContent=inf.desc;
-        dinoPanel.style.display='block';btnRestart.style.display='block';showHints();
-        roarAudio.currentTime=0;roarAudio.play().catch(()=>{});
+
+        nameEl.textContent=`${data[i].emoji} ${data[i].name}`;
+        subEl.textContent=data[i].desc;
+        info.classList.add('active');
+        title.textContent=nameEl.textContent;
+        desc.textContent=subEl.textContent;
+        dinoPanel.style.display='block';
+        btnRestart.style.display='block';
+        showHints();
+
+        roarAudio.currentTime=0;
+        roarAudio.play().catch(()=>{});
+
+        // 🔒 Desactivar tracking (pausa total)
+        if(arSystem && arSystem._arSession && arSystem._arSession.arSource){
+          arSystem._arSession.arSource.stop();
+        }
       });
     });
 
@@ -114,24 +123,17 @@
       const c=scene.components.screenshot?.getCanvas('perspective');if(!c){alert('⚠️ No se pudo capturar la imagen.');return;}
       const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='captura_dino.png';document.body.appendChild(a);a.click();a.remove();
     };
-    btnRestart.onclick=()=>{
-      if(currentModel)currentModel.remove();lockedMarker=null;currentModel=null;
-      info.classList.remove('active');dinoPanel.style.display='none';btnRestart.style.display='none';roarAudio.pause();showUI();
-    };
 
-    // Rotación y zoom
-    let isRot=false,lastX=0,lastY=0,rotY=0,rotX=0,velY=0,velX=0,scale=1,pinch=0,base=1,tchs=[];
-    function upd(){if(!currentModel)return;currentModel.setAttribute('rotation',`${rotX} ${rotY} 0`);currentModel.setAttribute('scale',`${scale} ${scale} ${scale}`);}
-    function inertia(){if(currentModel&&!isRot){velY*=0.95;velX*=0.95;if(Math.abs(velY)>0.1||Math.abs(velX)>0.1){rotY+=velY;rotX-=velX;rotX=Math.max(-45,Math.min(45,rotX));upd();}}requestAnimationFrame(inertia);}inertia();
-    function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);}
-    document.addEventListener('touchstart',e=>{if(!currentModel)return;tchs=[...e.touches];if(tchs.length===1){isRot=true;lastX=tchs[0].clientX;lastY=tchs[0].clientY;velX=velY=0;}else if(tchs.length===2){e.preventDefault();pinch=dist(tchs);base=scale;}},{passive:false});
-    document.addEventListener('touchmove',e=>{if(!currentModel)return;tchs=[...e.touches];if(tchs.length===1&&isRot){const dx=tchs[0].clientX-lastX,dy=tchs[0].clientY-lastY;velY=dx*0.5;velX=dy*0.3;rotY+=velY;rotX-=velX;rotX=Math.max(-45,Math.min(45,rotX));upd();lastX=tchs[0].clientX;lastY=tchs[0].clientY;}else if(tchs.length===2){e.preventDefault();const p=dist(tchs),ch=p/pinch;scale=Math.max(0.3,Math.min(2.5,base*ch));upd();}},{passive:false});
-    document.addEventListener('touchend',e=>{if(e.touches.length===0)isRot=false;if(e.touches.length<2)pinch=0;});
-    document.addEventListener('mousedown',e=>{if(!currentModel||e.target.closest('button'))return;isRot=true;lastX=e.clientX;lastY=e.clientY;e.preventDefault();});
-    document.addEventListener('mousemove',e=>{if(!isRot)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;velY=dx*0.5;velX=dy*0.3;rotY+=velY;rotX-=velX;rotX=Math.max(-45,Math.min(45,rotX));upd();lastX=e.clientX;lastY=e.clientY;});
-    document.addEventListener('mouseup',()=>isRot=false);
-    document.addEventListener('wheel',e=>{if(!currentModel)return;e.preventDefault();const d=e.deltaY*-0.001;scale=Math.max(0.3,Math.min(2.5,scale+d));upd();},{passive:false});
+    btnRestart.onclick=()=>{
+      if(currentModel)currentModel.remove();
+      lockedMarker=null;currentModel=null;
+      info.classList.remove('active');dinoPanel.style.display='none';btnRestart.style.display='none';roarAudio.pause();showUI();
+
+      // 🔁 Reactivar tracking
+      if(arSystem && arSystem._arSession && arSystem._arSession.arSource){
+        arSystem._arSession.arSource.start();
+      }
+    };
   </script>
 </body>
 </html>
-
