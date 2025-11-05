@@ -263,22 +263,26 @@ function initAR() {
   sceneEl = document.createElement('a-scene');
 
   const arjsConfig = [
-    'sourceType: webcam',
-    `sourceWidth: ${isMobile ? 640 : 1280}`,
-    `sourceHeight: ${isMobile ? 480 : 960}`,
-    `displayWidth: ${isMobile ? 640 : 1280}`,
-    `displayHeight: ${isMobile ? 480 : 960}`,
-    'trackingMethod: best',
-    'detectionMode: mono_and_matrix',
-    'matrixCodeType: 3x3',
-    'debugUIEnabled: false',
-    'minConfidence: 0.15',
-    'maxDetectionRate: 90',
-    'cameraParametersUrl: https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/data/data/camera_para.dat'
+  'sourceType: webcam',
+  'facingMode: environment',
+  'detectionMode: mono_and_matrix',
+  'matrixCodeType: 3x3',
+  'debugUIEnabled: false',
+  'maxDetectionRate: 15',
+  'minConfidence: 0.05',
+  'sourceWidth: 1280',
+  'sourceHeight: 720',
+  'displayWidth: 1280',
+  'displayHeight: 720'
   ].join('; ');
 
+
   sceneEl.setAttribute('arjs', arjsConfig);
-  sceneEl.setAttribute('renderer', 'logarithmicDepthBuffer: true; colorManagement: true; antialias: true; alpha: true;');
+  sceneEl.setAttribute(
+    'renderer',
+    'logarithmicDepthBuffer: true; precision: mediump; antialias: true;'
+  );
+
   sceneEl.setAttribute('vr-mode-ui', 'enabled: false');
   sceneEl.setAttribute('embedded', '');
   sceneEl.setAttribute('loading-screen', 'enabled: false');
