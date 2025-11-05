@@ -1,181 +1,275 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Experiencia AR - Dinos</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="stylesheet" href="/AppMindAr/style.css">
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Experiencia AR - Dinos (Escáner)</title>
+
+  <!-- A-Frame (igual al escáner) -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <!-- AR.js para A-Frame (igual al escáner) -->
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.4/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
+      background: #000; color: #fff;
+      overflow-y: auto; overflow-x: hidden;
+      position: fixed; width: 100%; height: 100%;
+    }
+
+    .overlay {
+      position: fixed; inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.7) 100%);
+      pointer-events: none; z-index: 10;
+    }
+
+    .header {
+      position: fixed; top: 0; left: 0; width: 100%;
+      padding: 20px; display: flex; justify-content: space-between; align-items: center;
+      z-index: 20; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+    }
+
+    .close-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; font-size: 20px; cursor: pointer; transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center; border: none;
+    }
+    .close-btn:hover { background: rgba(21, 59, 130,0.3); border-color: #153B82; }
+
+    .scanner-frame {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 70vmin; height: 70vmin; max-width: 400px; max-height: 400px;
+      border: 3px solid rgba(21,59,130,0.6); border-radius: 12px; z-index: 15;
+      pointer-events: none; box-shadow: 0 0 40px rgba(21,59,130,0.4); animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 40px rgba(21,59,130,0.4);} 50%{box-shadow:0 0 60px rgba(21,59,130,0.7);} }
+    .scan-line {
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, #4A90E2, transparent);
+      animation: scan 2s linear infinite; z-index: 16; pointer-events: none;
+    }
+    @keyframes scan { 0%{transform:translateY(0);} 100%{transform:translateY(70vmin);} }
+
+    .model-info {
+      position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.9); border: 1px solid rgba(21,59,130,0.5);
+      border-radius: 10px; padding: 12px 20px; z-index: 20; text-align: center;
+      backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s;
+    }
+    .model-info.active { opacity: 1; }
+    .model-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .model-subtitle { font-size: 12px; color: #4A90E2; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Video y canvas a fullscreen (igual al escáner) */
+    #arjs-video {
+      position: fixed !important; top: 0 !important; left: 0 !important;
+      width: 100% !important; height: 100% !important; z-index: -1 !important;
+    }
+    .a-canvas {
+      position: fixed !important; top: 0 !important; left: 0 !important;
+      width: 100% !important; height: 100% !important; z-index: 0 !important;
+    }
+    a-scene { width: 100% !important; height: 100% !important; }
+    @media (max-width: 768px) { .a-canvas { object-fit: contain !important; } }
+
+    @media (max-width: 768px) {
+      .scanner-frame { width: 80vmin; height: 80vmin; }
+    }
+  </style>
 </head>
-
 <body>
-  <!-- Interfaz de escaneo -->
-  <div id="scanning-ui" class="ui-layer">
-    <div class="projection-box"><div></div></div>
-    <div class="search-text">Apunta al centro de un marcador...</div>
+  <!-- UI mínima tipo escáner -->
+  <div class="overlay"></div>
+  <div class="header">
+    <div style="font-weight:700; font-size:18px;">Experiencia AR</div>
+    <button class="close-btn" id="closeBtn" title="Cerrar">✕</button>
   </div>
+  <div class="scanner-frame"><div class="scan-line"></div></div>
 
-  <!-- Panel de información -->
-  <div id="dino-info-panel" class="hidden">
-    <div class="info-content">
-      <h3 id="dino-name">Nombre del Modelo</h3>
-      <p id="dino-description">Descripción...</p>
-      <div class="interaction-buttons">
-        <button id="play-sound-btn">🔊 Sonido</button>
-        <button id="take-photo-btn">📸 Foto</button>
-      </div>
-    </div>
-    <button id="close-info-btn">✕</button>
+  <!-- Escena A-Frame con la config del escáner -->
+  <a-scene
+    id="scene"
+    embedded
+    vr-mode-ui="enabled: false"
+    arjs="
+      sourceType: webcam;
+      facingMode: environment;
+      detectionMode: mono_and_matrix;
+      matrixCodeType: 3x3;
+      debugUIEnabled: false;
+      maxDetectionRate: 15;
+      minConfidence: 0.05;
+      sourceWidth: 1280;
+      sourceHeight: 720;
+      displayWidth: 1280;
+      displayHeight: 720;
+    "
+    renderer="logarithmicDepthBuffer: true; precision: mediump; antialias: true;"
+  >
+
+    <!-- Marcadores 0–5 con modelos Dino -->
+    <!-- 0: Brachiosaurus -->
+    <a-marker id="marker0" type="barcode" value="0" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="model0" class="ar-model"
+        gltf-model="/AppMindAr/models/brachiosaurus.glb"
+        scale="0.065 0.065 0.05"
+        position="0 -0.62 -1.75"
+        rotation="0 300 0"
+      ></a-entity>
+    </a-marker>
+
+    <!-- 1: T-Rex -->
+    <a-marker id="marker1" type="barcode" value="1" emitevents="true" smooth="true" smoothCount="3" smoothTolerance="0.005" smoothThreshold="1">
+      <a-entity id="model1" class="ar-model"
+        gltf-model="/AppMindAr/models/trex.glb"
+        scale="0.15 0.15 0.15"
+        position="0 -0.4 -1.7"
+        rotation="0 90 0"
+      ></a-entity>
+    </a-marker>
+
+    <!-- 2: Triceratops -->
+    <a-marker id="marker2" type="barcode" value="2" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="model2" class="ar-model"
+        gltf-model="/AppMindAr/models/triceratops.glb"
+        scale="1 1 0.75"
+        position="0 -0.1 -1.5"
+        rotation="0 45 0"
+      ></a-entity>
+    </a-marker>
+
+    <!-- 3: Velociraptor -->
+    <a-marker id="marker3" type="barcode" value="3" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="model3" class="ar-model"
+        gltf-model="/AppMindAr/models/velociraptor.glb"
+        scale="0.35 0.35 0.35"
+        position="0 -0.3 -1.5"
+        rotation="0 0 0"
+      ></a-entity>
+    </a-marker>
+
+    <!-- 4: Stegosaurio -->
+    <a-marker id="marker4" type="barcode" value="4" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="model4" class="ar-model"
+        gltf-model="/AppMindAr/models/stegosaurio.glb"
+        scale="0.2 0.2 0.2"
+        position="0 -0.1 -1.5"
+        rotation="0 0 0"
+      ></a-entity>
+    </a-marker>
+
+    <!-- 5: Anquilosaurio -->
+    <a-marker id="marker5" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="model5" class="ar-model"
+        gltf-model="/AppMindAr/models/ankylosaurus.glb"
+        scale="0.02 0.02 0.02"
+        position="0 -0.1 -1.5"
+        rotation="0 0 0"
+      ></a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <!-- UI: Nombre del modelo -->
+  <div class="model-info" id="modelInfo">
+    <div class="model-name" id="modelName">Dinosaurio</div>
+    <div class="model-subtitle" id="modelSubtitle">Barcode AR</div>
   </div>
-
-  <!-- Botón de reescanear -->
-  <button id="restart-button" class="hidden">🔄 Reescanear</button>
-
-  <!-- Estado -->
-  <div id="detection-status" class="detection-status">Buscando marcador...</div>
-
-  <!-- Contenedor AR -->
-  <div id="ar-container"></div>
 
   <script>
-  const scanningUI = document.querySelector("#scanning-ui");
-  const restartButton = document.querySelector("#restart-button");
-  const dinoInfoPanel = document.querySelector("#dino-info-panel");
-  const closeInfoButton = document.querySelector("#close-info-btn");
-  const playSoundButton = document.querySelector("#play-sound-btn");
-  const detectionStatus = document.querySelector("#detection-status");
-  const takePhotoBtn = document.querySelector("#take-photo-btn");
+    // Sonido (igual que en dino)
+    const roarAudio = new Audio('/AppMindAr/sounds/roar.mp3');
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-  let sceneEl;
-  let isModelPlaced = false;
-  let currentModel = null;
+    // Nombres / descripciones (tomados de tu dino)
+    const modelInfo = {
+      0: { name: "Brachiosaurus", emoji: "🦕", description: "Gigante herbívoro de cuello largo.",
+           scale: "0.065 0.065 0.05", scaleMobile: "0.05 0.05 0.04",
+           position: "0 -0.62 -1.75", positionMobile: "0 -0.3 -1.75", rotation: "0 300 0" },
+      1: { name: "Tyrannosaurus Rex", emoji: "🦖", description: "El rey de los depredadores.",
+           scale: "0.15 0.15 0.15", scaleMobile: "0.1 0.1 0.1",
+           position: "0 -0.4 -1.7", rotation: "0 90 0" },
+      2: { name: "Triceratops", emoji: "🦏", description: "Herbívoro con tres cuernos.",
+           scale: "1 1 0.75", scaleMobile: "0.4 0.4 0.4",
+           position: "0 -0.1 -1.5", rotation: "0 45 0" },
+      3: { name: "Velociraptor", emoji: "🦎", description: "Cazador inteligente y ágil.",
+           scale: "0.35 0.35 0.35", scaleMobile: "0.15 0.15 0.15",
+           position: "0 -0.3 -1.5", rotation: "0 0 0" },
+      4: { name: "Stegosaurio", emoji: "🦕", description: "Herbívoro jurásico con placas óseas.",
+           scale: "0.2 0.2 0.2", scaleMobile: "0.1 0.1 0.10",
+           position: "0 -0.1 -1.5", rotation: "0 0 0" },
+      5: { name: "Anquilosaurio", emoji: "🛡️", description: "El tanque viviente del Cretácico.",
+           scale: "0.02 0.02 0.02", scaleMobile: "0.0022 0.0022 0.0022",
+           position: "0 -0.1 -1.5", positionMobile: "0 -0.1 -1.75", rotation: "0 0 0" }
+    };
 
-  const roarAudio = new Audio('/AppMindAr/sounds/roar.mp3');
-  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    // Cerrar
+    document.getElementById('closeBtn').addEventListener('click', () => window.history.back());
 
-  const modelInfo = {
-    0: { name: "Brachiosaurus", emoji: "🦕", description: "Gigante herbívoro de cuello largo.", scale: "0.065 0.065 0.05", scaleMobile: "0.05 0.05 0.04", position: "0 -0.62 -1.75", rotation: "0 300 0" },
-    1: { name: "Tyrannosaurus Rex", emoji: "🦖", description: "El rey de los depredadores.", scale: "0.15 0.15 0.15", scaleMobile: "0.1 0.1 0.1", position: "0 -0.4 -1.7", rotation: "0 90 0" },
-    2: { name: "Triceratops", emoji: "🦏", description: "Herbívoro con tres cuernos.", scale: "1 1 0.75", scaleMobile: "0.4 0.4 0.4", position: "0 -0.1 -1.5", rotation: "0 45 0" },
-    3: { name: "Velociraptor", emoji: "🦎", description: "Cazador inteligente y ágil.", scale: "0.35 0.35 0.35", scaleMobile: "0.15 0.15 0.15", position: "0 -0.3 -1.5", rotation: "0 0 0" },
-    4: { name: "Stegosaurio", emoji: "🦕", description: "Herbívoro con placas óseas distintivas.", scale: "0.2 0.2 0.2", scaleMobile: "0.1 0.1 0.10", position: "0 -0.1 -1.5", rotation: "0 0 0" },
-    5: { name: "Anquilosaurio", emoji: "🛡️", description: "El 'tanque viviente' del Cretácico.", scale: "0.02 0.02 0.02", scaleMobile: "0.0022 0.0022 0.0022", position: "0 -0.1 -1.5", rotation: "0 0 0" }
-  };
+    // Al cargar AR.js vídeo
+    const scene = document.getElementById('scene');
+    const modelInfoBox = document.getElementById('modelInfo');
+    const modelNameEl = document.getElementById('modelName');
+    const modelSubtitleEl = document.getElementById('modelSubtitle');
 
-  // Inicialización directa de la escena (como hacías antes)
-  window.addEventListener("load", () => {
-    initAR();
-  });
+    scene.addEventListener('arjs-video-loaded', () => {
+      // Fullscreen y FOV suaves (igual que escáner)
+      const arVideo = document.querySelector('video');
+      const arCanvas = document.querySelector('.a-canvas');
+      if (arVideo) {
+        arVideo.setAttribute('playsinline','');
+        Object.assign(arVideo.style, { position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh', objectFit: 'cover', zIndex: -1 });
+      }
+      if (arCanvas) {
+        Object.assign(arCanvas.style, { position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh' });
+      }
+      if (scene.camera) {
+        scene.camera.fov = isMobile ? 72 : 60;
+        scene.camera.updateProjectionMatrix();
+      }
+    });
 
-  function initAR() {
-    sceneEl = document.createElement('a-scene');
-    sceneEl.setAttribute('arjs', 'sourceType: webcam; facingMode: environment; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;');
-    sceneEl.setAttribute('vr-mode-ui', 'enabled: false');
-    sceneEl.setAttribute('embedded', '');
-    sceneEl.setAttribute('loading-screen', 'enabled: false');
-    sceneEl.setAttribute('screenshot', 'width: 1920; height: 1080;');
-
-    document.querySelector('#ar-container').appendChild(sceneEl);
-
-    const assets = document.createElement('a-assets');
-    assets.innerHTML = `
-      <a-asset-item id="brachiosaurus" src="/AppMindAr/models/brachiosaurus.glb"></a-asset-item>
-      <a-asset-item id="trex" src="/AppMindAr/models/trex.glb"></a-asset-item>
-      <a-asset-item id="triceratops" src="/AppMindAr/models/triceratops.glb"></a-asset-item>
-      <a-asset-item id="velociraptor" src="/AppMindAr/models/velociraptor.glb"></a-asset-item>
-      <a-asset-item id="stegosaurio" src="/AppMindAr/models/stegosaurio.glb"></a-asset-item>
-      <a-asset-item id="ankylosaurio" src="/AppMindAr/models/ankylosaurus.glb"></a-asset-item>
-    `;
-    sceneEl.appendChild(assets);
-
-    // Crear marcadores
-    for (let i = 0; i <= 5; i++) {
-      const marker = document.createElement('a-marker');
-      marker.setAttribute('type', 'barcode');
-      marker.setAttribute('value', i);
-      marker.addEventListener('markerFound', () => handleMarkerFound(marker, i));
-      sceneEl.appendChild(marker);
+    // Utilidad para setear atributos según mobile/desktop
+    function applyModelTransform(entity, cfg) {
+      const sc = isMobile && cfg.scaleMobile ? cfg.scaleMobile : cfg.scale;
+      const pos = isMobile && cfg.positionMobile ? cfg.positionMobile : cfg.position;
+      if (sc) entity.setAttribute('scale', sc);
+      if (pos) entity.setAttribute('position', pos);
+      if (cfg.rotation) entity.setAttribute('rotation', cfg.rotation);
+      entity.setAttribute('data-base-scale', sc || entity.getAttribute('scale'));
     }
 
-    const camera = document.createElement('a-entity');
-    camera.setAttribute('camera', '');
-    sceneEl.appendChild(camera);
+    // Wiring de eventos de marcadores 0–5
+    const markers = [0,1,2,3,4,5];
+    markers.forEach((i) => {
+      const markerEl = document.getElementById(`marker${i}`);
+      const modelEl  = document.getElementById(`model${i}`);
+      if (!markerEl || !modelEl) return;
 
-    detectionStatus.textContent = "Buscando marcador...";
-  }
+      // Asegurar transform inicial según dispositivo
+      applyModelTransform(modelEl, modelInfo[i]);
 
-  function handleMarkerFound(marker, i) {
-    if (isModelPlaced) return;
-    const cfg = modelInfo[i];
-    if (!cfg) return;
+      markerEl.addEventListener('markerFound', () => {
+        const info = modelInfo[i];
+        if (info) {
+          modelNameEl.textContent = `${info.emoji} ${info.name}`;
+          modelSubtitleEl.textContent = info.description;
+          modelInfoBox.classList.add('active');
+        }
+        try {
+          roarAudio.currentTime = 0;
+          roarAudio.play().catch(()=>{});
+        } catch {}
+      });
 
-    const scale = isMobile ? cfg.scaleMobile : cfg.scale;
-    const model = document.createElement('a-entity');
-    model.setAttribute('gltf-model', `#${getModelFile(i)}`);
-    model.setAttribute('scale', scale);
-    model.setAttribute('rotation', cfg.rotation);
-    model.setAttribute('position', cfg.position);
-    model.setAttribute('animation-mixer', '');
-    marker.appendChild(model);
-    currentModel = model;
-    isModelPlaced = true;
-
-    scanningUI.classList.add("hidden");
-    restartButton.classList.remove("hidden");
-    detectionStatus.textContent = `🦖 ${cfg.name} detectado`;
-    dinoInfoPanel.classList.remove("hidden");
-
-    document.getElementById('dino-name').textContent = `${cfg.emoji} ${cfg.name}`;
-    document.getElementById('dino-description').textContent = cfg.description;
-
-    playRoar();
-  }
-
-  function getModelFile(index) {
-    const files = ["brachiosaurus","trex","triceratops","velociraptor","stegosaurio","ankylosaurio"];
-    return files[index] || files[0];
-  }
-
-  function playRoar() {
-    roarAudio.currentTime = 0;
-    roarAudio.play().catch(e => console.log('Audio error', e));
-  }
-
-  playSoundButton.addEventListener("click", playRoar);
-
-  closeInfoButton.addEventListener("click", () => {
-    dinoInfoPanel.classList.add("hidden");
-  });
-
-  // 🔄 Reescanear
-  restartButton.addEventListener("click", () => {
-    isModelPlaced = false;
-    const models = document.querySelectorAll("a-marker a-entity[gltf-model]");
-    models.forEach(m => m.parentNode.removeChild(m));
-    dinoInfoPanel.classList.add("hidden");
-    restartButton.classList.add("hidden");
-    scanningUI.classList.remove("hidden");
-    detectionStatus.textContent = "Buscando marcador...";
-    roarAudio.pause();
-  });
-
-  // 📸 Foto (descarga automática)
-  takePhotoBtn.addEventListener("click", () => {
-    const scene = document.querySelector("a-scene");
-    if (scene && scene.components.screenshot) {
-      const dataUrl = scene.components.screenshot.getCanvas("perspective").toDataURL("image/png");
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = "captura_dino.png";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      alert("📸 Foto descargada correctamente");
-    } else {
-      alert("⚠️ No se pudo capturar la imagen.");
-    }
-  });
+      markerEl.addEventListener('markerLost', () => {
+        modelInfoBox.classList.remove('active');
+      });
+    });
   </script>
 </body>
 </html>
