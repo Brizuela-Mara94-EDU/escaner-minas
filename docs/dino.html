@@ -96,12 +96,25 @@
   const startButton = document.querySelector("#start-button");
 
   startButton.addEventListener("click", () => {
-    // Ocultamos la pantalla inicial (opcional)
+    // Ocultamos la pantalla inicial
     document.querySelector(".ui-overlay").style.display = "none";
 
-    // Redirigimos al nuevo escáner Dino
-    window.location.href = "arjs-dino.html";
+    // Usamos el modo AR.js como en el escáner
+    const selectedMode = 'arjs';
+    const marker = 'dino'; // marcador base, puede ser un nombre lógico
+    const name = 'Experiencia Dino';
+
+    let url;
+    if (selectedMode === 'mindar') {
+      url = `scanner.html?marker=${marker}&name=${encodeURIComponent(name)}`;
+    } else if (selectedMode === 'arjs') {
+      url = `arjs-dino.html?marker=${marker}&name=${encodeURIComponent(name)}`;
+    }
+
+    console.log('➡️ Redirigiendo a:', url);
+    window.location.href = url;
   });
+
 </script>
 
 
