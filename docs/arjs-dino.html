@@ -87,6 +87,13 @@
     let lastDetectedMarker = null;
     let trackingPaused = false;
 
+    // Debug logs para dispositivos móviles
+    console.log('AR debug: script cargado');
+    try {
+      console.log('AR debug: AFRAME presente?', typeof AFRAME !== 'undefined');
+    } catch (e) { console.log('AR debug: AFRAME check error', e); }
+    console.log('AR debug: navigator.mediaDevices?', !!(navigator && navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
+
     // Friendly names for UI
     const modelNames = {
       10: 'Brachiosaurus',
@@ -287,6 +294,7 @@
 
       // adjust when AR.js video ready
       scene.addEventListener('arjs-video-loaded', () => {
+        console.log('AR debug: arjs-video-loaded event fired');
         if (loading) loading.style.display = 'none';
         const arVideo = document.querySelector('video');
         if (arVideo) {
