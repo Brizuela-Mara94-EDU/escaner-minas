@@ -916,7 +916,20 @@ a-scene video {
   background: black !important;
   display: block !important;
 }
-
+/* Forzar cobertura total en desktop */
+@media (min-width: 769px) {
+  a-scene video,
+  #arjs-video {
+    object-fit: cover !important;
+    object-position: center center !important;
+  }
+  
+  a-scene canvas,
+  .a-canvas {
+    object-fit: cover !important;
+    background: #000 !important;
+  }
+}
 
 /* Ocultar controles de video nativos */
 video::-webkit-media-controls {

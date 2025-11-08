@@ -431,19 +431,26 @@
     
     sceneEl = document.createElement('a-scene');
     
-    const arjsConfig = [
-      `sourceType: webcam`,
-      `facingMode: environment`,
-      `detectionMode: mono_and_matrix`,
-      `matrixCodeType: 3x3`,
-      `debugUIEnabled: false`,
-      `maxDetectionRate: 30`,
-      `minConfidence: 0.5`,
-      `sourceWidth: 640`,
-      `sourceHeight: 480`,
-      `displayWidth: 640`,
-      `displayHeight: 480`
-    ].join('; ');
+    // Detectar si es desktop y ajustar resolución
+const isDesktop = window.innerWidth > 768;
+const sourceW = isDesktop ? 1280 : 640;
+const sourceH = isDesktop ? 720 : 480;
+
+const arjsConfig = [
+  `sourceType: webcam`,
+  `facingMode: environment`,
+  `detectionMode: mono_and_matrix`,
+  `matrixCodeType: 3x3`,
+  `debugUIEnabled: false`,
+  `maxDetectionRate: 30`,
+  `minConfidence: 0.5`,
+  `sourceWidth: ${sourceW}`,
+  `sourceHeight: ${sourceH}`,
+  `displayWidth: ${sourceW}`,
+  `displayHeight: ${sourceH}`
+].join('; ');
+
+console.log(`📐 Resolución configurada: ${sourceW}x${sourceH} (${isDesktop ? 'Desktop' : 'Mobile'})`);
     
     sceneEl.setAttribute('arjs', arjsConfig);
 
@@ -579,30 +586,45 @@
     });
 
     sceneEl.addEventListener('arjs-video-loaded', (event) => {
-      console.log('✅ Video AR.js cargado correctamente');
-      updateDetectionStatus("Cámara activa - Busca un marcador");
-      
-      // 🔥 FIX PARA SAMSUNG DE ALTA GAMA
-      const arVideo = document.querySelector('video');
-      if (arVideo) {
-        arVideo.setAttribute('playsinline', '');
-        arVideo.style.position = 'fixed';
-        arVideo.style.top = '0';
-        arVideo.style.left = '0';
-        arVideo.style.width = '100vw';
-        arVideo.style.height = '100vh';
-        arVideo.style.objectFit = 'cover';
-        console.log('🎥 Video ajustado para Samsung alta gama');
-      }
-      
-      // Ajustar FOV según dispositivo
-      const camera = document.querySelector('a-entity[camera]');
-      if (camera) {
-        const fov = isMobile ? 70 : 60;
-        camera.setAttribute('fov', fov);
-        console.log(`📷 FOV ajustado a ${fov}°`);
-      }
-    });
+  console.log('✅ Video AR.js cargado correctamente');
+  updateDetectionStatus("Cámara activa - Busca un marcador");
+  
+  // 🔥 FIX PARA SAMSUNG DE ALTA GAMA
+  const arVideo = document.querySelector('video');
+  if (arVideo) {
+    arVideo.setAttribute('playsinline', '');
+    arVideo.style.position = 'fixed';
+    arVideo.style.top = '0';
+    arVideo.style.left = '0';
+    arVideo.style.width = '100vw';
+    arVideo.style.height = '100vh';
+    arVideo.style.objectFit = 'cover';
+    arVideo.style.objectPosition = 'center center';
+    console.log('🎥 Video ajustado para Samsung alta gama');
+  }
+  
+  // Ajustar FOV según dispositivo
+  const camera = document.querySelector('a-entity[camera]');
+  if (camera) {
+    const fov = isMobile ? 70 : 60;
+    camera.setAttribute('fov', fov);
+    console.log(`📷 FOV ajustado a ${fov}°`);
+  }
+  
+  // 🔥 FIX PARA FRANJA BLANCA EN DESKTOP
+  const arCanvas = document.querySelector('a-scene canvas');
+  if (arCanvas) {
+    arCanvas.style.objectFit = 'cover';
+    arCanvas.style.objectPosition = 'center center';
+    console.log('🖼️ Canvas ajustado para evitar franjas blancas');
+  }
+  
+  // Forzar fondo negro
+  document.body.style.backgroundColor = '#000';
+  if (sceneEl) {
+    sceneEl.style.background = '#000';
+  }
+});
     
     sceneEl.addEventListener('camera-error', (error) => {
       console.error('❌ Error de cámara AR.js:', error);
