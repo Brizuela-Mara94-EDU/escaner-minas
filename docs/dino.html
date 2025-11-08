@@ -218,7 +218,23 @@
   };
 
   const roarAudio = new Audio('/AppMindAr/sounds/roar.mp3');
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  // Función para detectar móvil (se evalúa dinámicamente)
+  function checkIsMobile() {
+    const userAgentMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const screenWidthMobile = window.innerWidth <= 1024;
+    const isMobile = userAgentMobile || screenWidthMobile;
+    
+    console.log('🔍 checkIsMobile():');
+    console.log('  - User Agent mobile:', userAgentMobile);
+    console.log('  - Screen width:', window.innerWidth);
+    console.log('  - Screen width mobile:', screenWidthMobile);
+    console.log('  - isMobile final:', isMobile);
+    
+    return isMobile;
+  }
+
+// Llamar una vez al inicio para logging
+const isMobile = checkIsMobile();
   // ========== CONFIGURACIÓN DE LA ESCENA PRECARGADA ==========
   // Detectar si es desktop y ajustar resolución
   const isDesktop = window.innerWidth > 768;
@@ -241,6 +257,18 @@
   `);
 
   console.log(`📐 Resolución configurada: ${sourceW}x${sourceH} (${isDesktop ? 'Desktop' : 'Mobile'})`);
+  // ========== OCULTAR PANEL Y BOTÓN AL INICIO ==========
+console.log('🔧 Inicializando interfaz...');
+
+if (dinoInfoPanel) {
+  dinoInfoPanel.classList.add('hidden');
+  console.log('✅ Panel de información ocultado al inicio');
+}
+
+if (toggleInfoBtn) {
+  toggleInfoBtn.classList.add('hidden');
+  console.log('✅ Botón flotante ocultado al inicio');
+}
   function setupInteractiveControls(model) {
     currentModel = model;
     
@@ -251,7 +279,9 @@
     const pinchGesture = document.querySelector('.pinch-gesture');
     const scrollGesture = document.querySelector('.scroll-gesture');
     
-    if (!isMobile) {
+    const isMobileNow = checkIsMobile();
+
+    if (!isMobileNow) {
       rotateHint.textContent = "Clic y arrastra para girar";
       zoomHint.textContent = "Rueda del mouse para zoom";
       if (pinchGesture) pinchGesture.classList.add('hidden');
@@ -452,19 +482,36 @@
   }
 
   function showInfoButton() {
-    console.log('🔘 showInfoButton llamada - isMobile:', isMobile);
-    
-    if (isMobile && toggleInfoBtn) {
-      toggleInfoBtn.classList.remove('info-button-mobile');
-      toggleInfoBtn.classList.add('info-button-visible');
-      console.log('✅ Botón flotante activado para móvil');
-    }
+  const isMobileNow = checkIsMobile();
+  
+  console.log('==========================================');
+  console.log('🔘 showInfoButton llamada');
+  console.log('  - isMobile:', isMobileNow);
+  console.log('  - toggleInfoBtn existe:', !!toggleInfoBtn);
+  
+  if (isMobileNow && toggleInfoBtn) {
+    console.log('  ✅ Condición cumplida - mostrando botón');
+    toggleInfoBtn.style.display = 'flex';
+    toggleInfoBtn.classList.remove('info-button-mobile', 'hidden');
+    toggleInfoBtn.classList.add('info-button-visible');
+    toggleInfoBtn.style.animation = 'pulseAttention 1.5s ease-in-out infinite';
+    console.log('  ✅ Botón flotante activado y parpadeando');
+    console.log('  - display:', toggleInfoBtn.style.display);
+    console.log('  - classes:', toggleInfoBtn.className);
+  } else {
+    console.log('  ❌ Condición NO cumplida');
+    console.log('    - isMobile:', isMobileNow);
+    console.log('    - toggleInfoBtn:', !!toggleInfoBtn);
   }
+  console.log('==========================================');
+}
 
   function hideInfoButton() {
     if (toggleInfoBtn) {
+      toggleInfoBtn.style.display = 'none'; // Ocultar completamente
       toggleInfoBtn.classList.remove('info-button-visible');
-      toggleInfoBtn.classList.add('info-button-mobile');
+      toggleInfoBtn.classList.add('info-button-mobile', 'hidden');
+      toggleInfoBtn.style.animation = 'none';
     }
   }
 
@@ -511,9 +558,9 @@
         const modelConfig = modelInfo[modelIndex];
         if (!modelConfig) return;
         
-        const scaleToUse = isMobile ? modelConfig.scaleMobile : modelConfig.scale;
-        const positionToUse = isMobile && modelConfig.positionMobile ? modelConfig.positionMobile : modelConfig.position;
-        
+        const isMobileNow = checkIsMobile();
+        const scaleToUse = isMobileNow ? modelConfig.scaleMobile : modelConfig.scale;
+        const positionToUse = isMobileNow && modelConfig.positionMobile ? modelConfig.positionMobile : modelConfig.position;
         const placedModel = document.createElement('a-entity');
         placedModel.setAttribute('class', 'placed-model');
         placedModel.setAttribute('gltf-model', getModelFile(modelIndex));
@@ -537,14 +584,24 @@
         showInfoButton();
         
         const info = modelInfo[modelIndex];
-        if (info) {
-          document.getElementById('dino-name').textContent = `${info.emoji} ${info.name}`;
-          document.getElementById('dino-description').textContent = info.description;
-          
-          if (!isMobile) {
-            dinoInfoPanel.classList.remove('hidden');
-          }
-        }
+if (info) {
+  document.getElementById('dino-name').textContent = `${info.emoji} ${info.name}`;
+  document.getElementById('dino-description').textContent = info.description;
+  
+  console.log('🔍 Verificando dispositivo para mostrar panel...');
+console.log('   - isMobile:', isMobileNow);
+console.log('   - window.innerWidth:', window.innerWidth);
+console.log('   - dinoInfoPanel existe:', !!dinoInfoPanel);
+console.log('   - dinoInfoPanel classes antes:', dinoInfoPanel.className);
+
+if (!isMobileNow) {
+    console.log('✅ DESKTOP: Mostrando panel automáticamente');
+    dinoInfoPanel.classList.remove('hidden');
+    dinoInfoPanel.style.display = 'block';
+  } else {
+    console.log('📱 MÓVIL: Panel oculto - esperando clic en botón');
+  }
+}
         
         try {
           roarAudio.currentTime = 0;
@@ -583,7 +640,8 @@
     // Ajustar FOV según dispositivo
     const camera = document.querySelector('a-entity[camera]');
     if (camera) {
-      const fov = isMobile ? 70 : 60;
+      const isMobileNow = checkIsMobile();
+      const fov = isMobileNow ? 70 : 60;
       camera.setAttribute('fov', fov);
       console.log(`📷 FOV ajustado a ${fov}°`);
     }
@@ -693,19 +751,34 @@
 
   if (toggleInfoBtn && dinoInfoPanel) {
     toggleInfoBtn.addEventListener('click', () => {
-      console.log('🔘 Botón presionado');
+      console.log('🔘 Botón flotante presionado en móvil');
+      
+      // Mostrar el panel
       dinoInfoPanel.classList.remove('hidden');
+      dinoInfoPanel.style.display = 'block';
+      
+      // Ocultar el botón flotante
       hideInfoButton();
+      
+      console.log('✅ Panel mostrado, botón ocultado');
     });
   }
 
   if (closeInfoButton && dinoInfoPanel) {
     closeInfoButton.addEventListener('click', () => {
-      dinoInfoPanel.classList.add('hidden');
+      console.log('❌ Cerrando panel de información');
       
-      if (isMobile) {
-        showInfoButton();
-      }
+      // Ocultar el panel
+      dinoInfoPanel.classList.add('hidden');
+      dinoInfoPanel.style.display = 'none';
+      
+
+      // Mostrar el botón flotante nuevamente en móvil
+    const isMobileNow = checkIsMobile();
+    if (isMobileNow) {
+      showInfoButton();
+      console.log('🔘 Botón flotante visible nuevamente');
+    }
     });
   }
 </script>
