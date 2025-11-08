@@ -926,3 +926,34 @@ video::-webkit-media-controls {
 video::-webkit-media-controls-enclosure {
   display: none !important;
 }
+/* ============================================= */
+/* === FIX PARA SAMSUNG DE ALTA GAMA === */
+/* ============================================= */
+
+/* Forzar ID del video de AR.js */
+#arjs-video {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  z-index: -1 !important;
+}
+
+/* Canvas de A-Frame */
+.a-canvas {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0 !important;
+}
+
+/* Ajuste para móviles */
+@media (max-width: 768px) {
+  .a-canvas {
+    object-fit: contain !important;
+  }
+}
