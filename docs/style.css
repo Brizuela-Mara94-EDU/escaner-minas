@@ -85,7 +85,7 @@ body, html {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  z-index: 1 !important;
+  z-index: 3 !important;
   object-fit: cover !important;
 }
 
@@ -430,7 +430,7 @@ video::-webkit-media-controls-enclosure {
   width: 100vw;
   height: 100vh;
   background: #000000; /* Color negro sólido - puedes cambiarlo */
-  z-index: 2;
+  z-index: 1;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.5s ease;
@@ -881,4 +881,49 @@ video::-webkit-media-controls-enclosure {
   #toggle-info-btn {
     display: none !important;
   }
+}
+/* ============================================= */
+/* === ORDEN DE CAPAS (Z-INDEX) === */
+/* ============================================= */
+
+/* Capa 0: Video de cámara (fondo) */
+#scene video {
+  z-index: 0 !important;
+}
+
+/* Capa 1: Overlay negro */
+.model-overlay {
+  z-index: 1 !important;
+}
+
+/* Capa 2: Escena 3D */
+#scene {
+  z-index: 2 !important;
+}
+
+/* Capa 3: Canvas de A-Frame (modelos 3D) */
+#scene canvas {
+  z-index: 3 !important;
+}
+
+/* Capa 10: UI de escaneo */
+#scanning-ui {
+  z-index: 10 !important;
+}
+
+/* Capa 50: Controles */
+.control-indicators {
+  z-index: 50 !important;
+}
+
+/* Capa 100: Paneles y botones */
+#dino-info-panel,
+#restart-button,
+.detection-status {
+  z-index: 100 !important;
+}
+
+/* Capa 150: Botón flotante móvil */
+#toggle-info-btn {
+  z-index: 150 !important;
 }
