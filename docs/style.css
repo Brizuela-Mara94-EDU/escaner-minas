@@ -48,6 +48,57 @@ body, html {
 }
 
 /* ============================================= */
+/* === CONTROL DE ESCENA AR === */
+/* ============================================= */
+#scene {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 1 !important;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#scene.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Video de la cámara */
+#scene video {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
+  z-index: 0 !important;
+}
+
+/* Canvas de renderizado */
+#scene canvas {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 1 !important;
+  object-fit: cover !important;
+}
+
+/* Ocultar controles nativos del video */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+/* ============================================= */
 /* === PÁGINA DE BIENVENIDA === */
 /* ============================================= */
 .welcome-container {
@@ -196,7 +247,6 @@ body, html {
   text-align: center;
   padding: 2rem;
   animation: fadeIn 1s ease-in;
-  position: relative;
   overflow: hidden;
 }
 
@@ -235,7 +285,6 @@ body, html {
     0 0 10px rgba(251, 187, 33, 0.5),
     0 0 20px rgba(239, 125, 0, 0.3),
     3px 3px 6px rgba(0, 0, 0, 0.5);
-  animation: none;
   font-weight: 900;
 }
 
@@ -269,55 +318,8 @@ body, html {
 }
 
 /* ============================================= */
-/* === ESTILOS PARA AR === */
+/* === UI DE ESCANEO === */
 /* ============================================= */
-
-#ar-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 1;
-  background: transparent !important; /* ✅ dejar pasar la cámara */
-}
-
-a-scene {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 1 !important;
-  background: transparent !important;
-}
-
-a-scene canvas {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 1 !important;
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  background: transparent!important; /* Fondo negro mientras carga */
-}
-
-a-scene video {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  object-fit: cover !important;
-  z-index: 0 !important;
-  opacity: 1 !important;
-  display: block !important;
-}
-
-/* UI de escaneo - FONDO MÁS CLARO */
 #scanning-ui {
   position: fixed;
   top: 0;
@@ -336,29 +338,6 @@ a-scene video {
 
 #scanning-ui.hidden {
   display: none !important;
-}
-
-.search-indicator {
-  text-align: center;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  border-radius: 30px;
-  padding: 30px;
-  border: 4px solid var(--amarillo);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-  max-width: 350px;
-  width: 100%;
-}
-
-.scanner-animation {
-  width: 80px;
-  height: 80px;
-  border: 5px solid rgba(251, 187, 33, 0.3);
-  border-top: 5px solid var(--amarillo);
-  border-radius: 50%;
-  margin: 0 auto 20px;
-  animation: spin 1.5s linear infinite;
-  box-shadow: 0 0 20px rgba(251, 187, 33, 0.5);
 }
 
 .search-text {
@@ -441,11 +420,38 @@ a-scene video {
   z-index: 100;
   border: 2px solid var(--amarillo);
 }
-
 /* ============================================= */
-/* === BOTÓN FLOTANTE MÓVIL - CORREGIDO === */
+/* === FONDO SÓLIDO PARA MODELO === */
 /* ============================================= */
+.model-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000000; /* Color negro sólido - puedes cambiarlo */
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
 
+.model-overlay.visible {
+  opacity: 1;
+}
+
+.model-overlay.hidden {
+  opacity: 0;
+}
+
+/* Ocultar el video cuando el modelo está visible */
+#scene.model-active video {
+  opacity: 0 !important;
+  transition: opacity 0.5s ease;
+}
+/* ============================================= */
+/* === BOTÓN FLOTANTE MÓVIL === */
+/* ============================================= */
 #toggle-info-btn {
   display: none;
   position: fixed;
@@ -466,10 +472,6 @@ a-scene video {
   padding: 0;
 }
 
-#toggle-info-btn.pulse {
-  animation: pulseAttention 1.5s ease-in-out infinite;
-}
-
 #toggle-info-btn:active {
   transform: scale(0.9);
 }
@@ -477,7 +479,6 @@ a-scene video {
 /* ============================================= */
 /* === PANEL DE INFORMACIÓN === */
 /* ============================================= */
-
 #dino-info-panel {
   position: fixed;
   bottom: 20px;
@@ -490,10 +491,8 @@ a-scene video {
   padding: 25px;
   border: 4px solid var(--amarillo);
   z-index: 100;
-  box-sizing: border-box;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
   pointer-events: auto;
-  transform: none; 
 }
 
 #dino-info-panel.hidden {
@@ -587,7 +586,6 @@ a-scene video {
 /* ============================================= */
 /* === BOTONES DE CONTROL === */
 /* ============================================= */
-
 #restart-button {
   position: fixed;
   top: 20px;
@@ -614,12 +612,10 @@ a-scene video {
 /* ============================================= */
 /* === INDICADORES DE CONTROL === */
 /* ============================================= */
-
 .control-indicators {
   position: fixed;
   top: 80px;
   left: 20px;
-  transform: none;
   z-index: 50;
   opacity: 0;
   visibility: hidden;
@@ -689,7 +685,6 @@ a-scene video {
 /* ============================================= */
 /* === ANIMACIONES === */
 /* ============================================= */
-
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -747,17 +742,6 @@ a-scene video {
   to { transform: translateX(-50%); }
 }
 
-@keyframes pulseAttention {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 6px 25px rgba(251, 187, 33, 0.6);
-  }
-  50% {
-    transform: scale(1.15);
-    box-shadow: 0 10px 40px rgba(251, 187, 33, 0.9);
-  }
-}
-
 @keyframes sparkle {
   0% { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; }
   100% { background-position: 200px 100px, 200px 100px, 200px 100px, 200px 100px, 200px 100px; }
@@ -766,7 +750,6 @@ a-scene video {
 /* ============================================= */
 /* === RESPONSIVE === */
 /* ============================================= */
-
 @media (max-width: 480px) {
   .title-animated {
     font-size: 2rem;
@@ -781,7 +764,6 @@ a-scene video {
     padding: 16px 30px;
   }
 
-  /* BOTÓN FLOTANTE - VISIBLE EN MÓVILES */
   #toggle-info-btn {
     display: flex !important;
   }
@@ -790,7 +772,6 @@ a-scene video {
     display: none !important;
   }
 
-  /* PANEL CENTRADO EN MÓVILES */
   #dino-info-panel {
     position: fixed;
     top: 50%;
@@ -800,7 +781,6 @@ a-scene video {
     max-width: 400px;
     max-height: 70vh;
     border-radius: 20px;
-    z-index: 100;
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -897,76 +877,8 @@ a-scene video {
   }
 }
 
-/* OCULTAR BOTÓN EN DESKTOP */
 @media (min-width: 481px) {
   #toggle-info-btn {
     display: none !important;
-  }
-}
-
-/* ✅ Video principal de AR.js */
-a-scene video {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  object-fit: cover !important;
-  z-index: 0 !important;
-  background: black !important;
-  display: block !important;
-}
-/* Forzar cobertura total en desktop */
-@media (min-width: 769px) {
-  a-scene video,
-  #arjs-video {
-    object-fit: cover !important;
-    object-position: center center !important;
-  }
-  
-  a-scene canvas,
-  .a-canvas {
-    object-fit: cover !important;
-    background: #000 !important;
-  }
-}
-
-/* Ocultar controles de video nativos */
-video::-webkit-media-controls {
-  display: none !important;
-}
-
-video::-webkit-media-controls-enclosure {
-  display: none !important;
-}
-/* ============================================= */
-/* === FIX PARA SAMSUNG DE ALTA GAMA === */
-/* ============================================= */
-
-/* Forzar ID del video de AR.js */
-#arjs-video {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  z-index: -1 !important;
-}
-
-/* Canvas de A-Frame */
-.a-canvas {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 0 !important;
-}
-
-/* Ajuste para móviles */
-@media (max-width: 768px) {
-  .a-canvas {
-    object-fit: contain !important;
   }
 }

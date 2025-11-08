@@ -50,7 +50,8 @@
     </div>
     <button id="close-info-btn">✕</button>
   </div>
-  
+  <!-- Overlay oscuro para resaltar el modelo -->
+  <div id="model-overlay" class="model-overlay hidden"></div>
   <!-- Indicadores de Control Interactivo -->
   <div class="control-indicators hidden" id="control-indicators">
     <div class="control-hint">
@@ -86,11 +87,45 @@
   </div>
   
   <!-- Botones de control -->
-  <button id="restart-button" class="hidden">🔄</button>
-  
-  <!-- Contenedor AR -->
-  <div id="ar-container"></div>
-  <div id="detection-status" class="detection-status hidden">Dino: Inactivo</div>
+<button id="restart-button" class="hidden">🔄</button>
+
+<!-- AQUÍ VA LA ESCENA PRECARGADA (reemplaza solo el div#ar-container) -->
+<a-scene
+  id="scene"
+  embedded
+  vr-mode-ui="enabled: false"
+  loading-screen="enabled: false"
+  renderer="logarithmicDepthBuffer: true; precision: mediump; antialias: true;"
+>
+  <!-- Assets precargados -->
+  <a-assets>
+    <a-asset-item id="brachiosaurus" crossorigin="anonymous" src="/AppMindAr/models/brachiosaurus.glb"></a-asset-item>
+    <a-asset-item id="trex" crossorigin="anonymous" src="/AppMindAr/models/trex.glb"></a-asset-item>
+    <a-asset-item id="triceratops" crossorigin="anonymous" src="/AppMindAr/models/triceratops.glb"></a-asset-item>
+    <a-asset-item id="velociraptor" crossorigin="anonymous" src="/AppMindAr/models/velociraptor.glb"></a-asset-item>
+    <a-asset-item id="stegosaurio" crossorigin="anonymous" src="/AppMindAr/models/stegosaurio.glb"></a-asset-item>
+    <a-asset-item id="ankylosaurio" crossorigin="anonymous" src="/AppMindAr/models/ankylosaurus.glb"></a-asset-item>
+  </a-assets>
+
+  <!-- Luces -->
+  <a-light type="ambient" color="#FFF" intensity="1.2"></a-light>
+  <a-light type="directional" color="#FFF" intensity="1.5" position="-1 1 1"></a-light>
+  <a-light type="directional" color="#FFF" intensity="0.8" position="1 1 -1"></a-light>
+
+  <!-- Marcadores precargados -->
+  <a-marker class="dino-marker" data-model-index="0" type="barcode" value="0" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2"></a-marker>
+  <a-marker class="dino-marker" data-model-index="1" type="barcode" value="1" emitevents="true" smooth="true" smoothCount="3" smoothTolerance="0.005" smoothThreshold="1"></a-marker>
+  <a-marker class="dino-marker" data-model-index="2" type="barcode" value="2" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2"></a-marker>
+  <a-marker class="dino-marker" data-model-index="3" type="barcode" value="3" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2"></a-marker>
+  <a-marker class="dino-marker" data-model-index="4" type="barcode" value="4" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2"></a-marker>
+  <a-marker class="dino-marker" data-model-index="5" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2"></a-marker>
+
+  <!-- Cámara -->
+  <a-entity camera></a-entity>
+</a-scene>
+
+<!-- ESTA LÍNEA SE QUEDA -->
+<div id="detection-status" class="detection-status hidden">Dino: Inactivo</div>
 
 <script>
   const startButton = document.querySelector("#start-button");
@@ -106,7 +141,7 @@
   const zoomHint = document.querySelector("#zoom-hint");
   const toggleInfoBtn = document.querySelector('#toggle-info-btn');
 
-  let sceneEl;
+  let sceneEl = document.getElementById('scene');
   let hintTimeout;
   let isModelPlaced = false;
   let currentModel = null;
@@ -184,7 +219,28 @@
 
   const roarAudio = new Audio('/AppMindAr/sounds/roar.mp3');
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  // ========== CONFIGURACIÓN DE LA ESCENA PRECARGADA ==========
+  // Detectar si es desktop y ajustar resolución
+  const isDesktop = window.innerWidth > 768;
+  const sourceW = isDesktop ? 1280 : 640;
+  const sourceH = isDesktop ? 720 : 480;
 
+  // Configurar AR.js en la escena precargada
+  sceneEl.setAttribute('arjs', `
+    sourceType: webcam;
+    facingMode: environment;
+    detectionMode: mono_and_matrix;
+    matrixCodeType: 3x3;
+    debugUIEnabled: false;
+    maxDetectionRate: 30;
+    minConfidence: 0.5;
+    sourceWidth: ${sourceW};
+    sourceHeight: ${sourceH};
+    displayWidth: ${sourceW};
+    displayHeight: ${sourceH};
+  `);
+
+  console.log(`📐 Resolución configurada: ${sourceW}x${sourceH} (${isDesktop ? 'Desktop' : 'Mobile'})`);
   function setupInteractiveControls(model) {
     currentModel = model;
     
@@ -420,223 +476,157 @@
     document.querySelector(".ui-overlay").style.display = "none";
     if (scanningUI) scanningUI.classList.remove("hidden");
     if (detectionStatus) detectionStatus.classList.remove("hidden");
-    
-    initAR();
-  });
-
-  function initAR() {
-    if (sceneEl && sceneEl.parentNode) {
-      arContainer.removeChild(sceneEl);
-    }
-    
-    sceneEl = document.createElement('a-scene');
-    
-    // Detectar si es desktop y ajustar resolución
-const isDesktop = window.innerWidth > 768;
-const sourceW = isDesktop ? 1280 : 640;
-const sourceH = isDesktop ? 720 : 480;
-
-const arjsConfig = [
-  `sourceType: webcam`,
-  `facingMode: environment`,
-  `detectionMode: mono_and_matrix`,
-  `matrixCodeType: 3x3`,
-  `debugUIEnabled: false`,
-  `maxDetectionRate: 30`,
-  `minConfidence: 0.5`,
-  `sourceWidth: ${sourceW}`,
-  `sourceHeight: ${sourceH}`,
-  `displayWidth: ${sourceW}`,
-  `displayHeight: ${sourceH}`
-].join('; ');
-
-console.log(`📐 Resolución configurada: ${sourceW}x${sourceH} (${isDesktop ? 'Desktop' : 'Mobile'})`);
-    
-    sceneEl.setAttribute('arjs', arjsConfig);
-
-    sceneEl.setAttribute('vr-mode-ui', 'enabled: false');
-    sceneEl.setAttribute('embedded', '');
-    sceneEl.setAttribute('loading-screen', 'enabled: false');
-
-    arContainer.appendChild(sceneEl);
-    
-    const baseURL = `${window.location.origin}/AppMindAr/models/`;
-
-    const assets = document.createElement('a-assets');
-    assets.innerHTML = `
-      <a-asset-item id="brachiosaurus" crossorigin="anonymous" src="${baseURL}brachiosaurus.glb"></a-asset-item>
-      <a-asset-item id="trex" crossorigin="anonymous" src="${baseURL}trex.glb"></a-asset-item>
-      <a-asset-item id="triceratops" crossorigin="anonymous" src="${baseURL}triceratops.glb"></a-asset-item>
-      <a-asset-item id="velociraptor" crossorigin="anonymous" src="${baseURL}velociraptor.glb"></a-asset-item>
-      <a-asset-item id="stegosaurio" crossorigin="anonymous" src="${baseURL}stegosaurio.glb"></a-asset-item>
-      <a-asset-item id="ankylosaurio" crossorigin="anonymous" src="${baseURL}ankylosaurus.glb"></a-asset-item>
-    `;
-    sceneEl.appendChild(assets);
-
-
-
-
-    const ambientLight = document.createElement('a-light');
-    ambientLight.setAttribute('type', 'ambient');
-    ambientLight.setAttribute('color', '#FFF');
-    ambientLight.setAttribute('intensity', '1.2');
-    sceneEl.appendChild(ambientLight);
-
-    const directionalLight = document.createElement('a-light');
-    directionalLight.setAttribute('type', 'directional');
-    directionalLight.setAttribute('color', '#FFF');
-    directionalLight.setAttribute('intensity', '1.5');
-    directionalLight.setAttribute('position', '-1 1 1');
-    sceneEl.appendChild(directionalLight);
-
-    const directionalLight2 = document.createElement('a-light');
-    directionalLight2.setAttribute('type', 'directional');
-    directionalLight2.setAttribute('color', '#FFF');
-    directionalLight2.setAttribute('intensity', '0.8');
-    directionalLight2.setAttribute('position', '1 1 -1');
-    sceneEl.appendChild(directionalLight2);
-
-    for (let i = 0; i <= 5; i++) {
-      const marker = document.createElement('a-marker');
-      marker.setAttribute('class', 'dino-marker');
-      marker.setAttribute('data-model-index', i);
-      marker.setAttribute('type', 'barcode');
-      marker.setAttribute('value', i);
-      marker.setAttribute('emitevents', 'true');
-      marker.setAttribute('smooth', 'true');
-      marker.setAttribute('smoothCount', i === 1 ? '3' : '5');
-      marker.setAttribute('smoothTolerance', i === 1 ? '0.005' : '0.01');
-      marker.setAttribute('smoothThreshold', i === 1 ? '1' : '2');
-      sceneEl.appendChild(marker);
-    }
-
-    const camera = document.createElement('a-entity');
-    camera.setAttribute('camera', '');
-    sceneEl.appendChild(camera);
+  
+    sceneEl.classList.add('active');
     
     updateDetectionStatus("Buscando marcadores...");
-    isModelPlaced = false;
-
-    sceneEl.addEventListener('loaded', () => {
-      updateDetectionStatus("Listo para escanear");
-      
-      const markers = document.querySelectorAll('.dino-marker');
-      markers.forEach(marker => {
-        marker.addEventListener('markerFound', (event) => {
-          if (isModelPlaced) return;
-          
-          const modelIndex = marker.getAttribute('data-model-index');
-          console.log('🦖 Marcador encontrado:', modelIndex);
-          updateDetectionStatus(`¡Eureka! Dino ${modelIndex} encontrado!`);
-          
-          const modelConfig = modelInfo[modelIndex];
-          if (!modelConfig) return;
-          
-          const scaleToUse = isMobile ? modelConfig.scaleMobile : modelConfig.scale;
-          const positionToUse = isMobile && modelConfig.positionMobile ? modelConfig.positionMobile : modelConfig.position;
-          
-          const placedModel = document.createElement('a-entity');
-          placedModel.setAttribute('class', 'placed-model');
-          placedModel.setAttribute('gltf-model', getModelFile(modelIndex));
-          placedModel.setAttribute('scale', scaleToUse);
-          placedModel.setAttribute('data-base-scale', scaleToUse);
-          placedModel.setAttribute('rotation', modelConfig.rotation);
-          placedModel.setAttribute('animation-mixer', '');
-          
-          const camera = document.querySelector('a-entity[camera]');
-          placedModel.setAttribute('position', positionToUse);
-          camera.appendChild(placedModel);
-          
-          isModelPlaced = true;
-          currentScale = 1;
-          
-          setupInteractiveControls(placedModel);
-          
-          if (scanningUI) scanningUI.classList.add("hidden");
-          if (restartButton) restartButton.classList.remove("hidden");
-          
-          showInfoButton();
-          
-          const info = modelInfo[modelIndex];
-          if (info) {
-            document.getElementById('dino-name').textContent = `${info.emoji} ${info.name}`;
-            document.getElementById('dino-description').textContent = info.description;
-            
-            if (!isMobile) {
-              dinoInfoPanel.classList.remove('hidden');
-              console.log('📱 Panel mostrado en desktop');
-            } else {
-              console.log('📱 Esperando interacción del botón en móvil');
-            }
-          }
-          
-          try {
-            roarAudio.currentTime = 0;
-            roarAudio.play().catch(e => console.log('Error al reproducir audio:', e));
-          } catch(e) {
-            console.log('Error con audio:', e);
-          }
-        });
+    console.log('🎬 Escena AR activada');
+  });
+    // ========== EVENTOS DE LA ESCENA ==========
+  sceneEl.addEventListener('loaded', () => {
+    console.log('✅ Escena A-Frame cargada y lista');
+    
+    // Configurar eventos de marcadores
+    const markers = document.querySelectorAll('.dino-marker');
+    markers.forEach(marker => {
+      marker.addEventListener('markerFound', (event) => {
+        if (isModelPlaced) return;
         
-        marker.addEventListener('markerLost', () => {
-          const modelIndex = marker.getAttribute('data-model-index');
-          console.log('Marcador perdido:', modelIndex);
-        });
+        const modelIndex = marker.getAttribute('data-model-index');
+        console.log('🦖 Marcador encontrado:', modelIndex);
+        updateDetectionStatus(`¡Eureka! Dino ${modelIndex} encontrado!`);
+
+          // Ocultar cámara y mostrar fondo sólido
+        const modelOverlay = document.getElementById('model-overlay');
+        if (modelOverlay) {
+          modelOverlay.classList.remove('hidden');
+          modelOverlay.classList.add('visible');
+        }
+        
+        // Agregar clase para ocultar video
+        if (sceneEl) {
+          sceneEl.classList.add('model-active');
+        }
+        
+        const modelConfig = modelInfo[modelIndex];
+        if (!modelConfig) return;
+        
+        const scaleToUse = isMobile ? modelConfig.scaleMobile : modelConfig.scale;
+        const positionToUse = isMobile && modelConfig.positionMobile ? modelConfig.positionMobile : modelConfig.position;
+        
+        const placedModel = document.createElement('a-entity');
+        placedModel.setAttribute('class', 'placed-model');
+        placedModel.setAttribute('gltf-model', getModelFile(modelIndex));
+        placedModel.setAttribute('scale', scaleToUse);
+        placedModel.setAttribute('data-base-scale', scaleToUse);
+        placedModel.setAttribute('rotation', modelConfig.rotation);
+        placedModel.setAttribute('animation-mixer', '');
+        
+        const camera = document.querySelector('a-entity[camera]');
+        placedModel.setAttribute('position', positionToUse);
+        camera.appendChild(placedModel);
+        
+        isModelPlaced = true;
+        currentScale = 1;
+        
+        setupInteractiveControls(placedModel);
+        
+        if (scanningUI) scanningUI.classList.add("hidden");
+        if (restartButton) restartButton.classList.remove("hidden");
+        
+        showInfoButton();
+        
+        const info = modelInfo[modelIndex];
+        if (info) {
+          document.getElementById('dino-name').textContent = `${info.emoji} ${info.name}`;
+          document.getElementById('dino-description').textContent = info.description;
+          
+          if (!isMobile) {
+            dinoInfoPanel.classList.remove('hidden');
+          }
+        }
+        
+        try {
+          roarAudio.currentTime = 0;
+          roarAudio.play().catch(e => console.log('Error al reproducir audio:', e));
+        } catch(e) {
+          console.log('Error con audio:', e);
+        }
+      });
+      
+      marker.addEventListener('markerLost', () => {
+        const modelIndex = marker.getAttribute('data-model-index');
+        console.log('Marcador perdido:', modelIndex);
       });
     });
+  });
 
-    sceneEl.addEventListener('arjs-video-loaded', (event) => {
-  console.log('✅ Video AR.js cargado correctamente');
-  updateDetectionStatus("Cámara activa - Busca un marcador");
-  
-  // 🔥 FIX PARA SAMSUNG DE ALTA GAMA
-  const arVideo = document.querySelector('video');
-  if (arVideo) {
-    arVideo.setAttribute('playsinline', '');
-    arVideo.style.position = 'fixed';
-    arVideo.style.top = '0';
-    arVideo.style.left = '0';
-    arVideo.style.width = '100vw';
-    arVideo.style.height = '100vh';
-    arVideo.style.objectFit = 'cover';
-    arVideo.style.objectPosition = 'center center';
-    console.log('🎥 Video ajustado para Samsung alta gama');
-  }
-  
-  // Ajustar FOV según dispositivo
-  const camera = document.querySelector('a-entity[camera]');
-  if (camera) {
-    const fov = isMobile ? 70 : 60;
-    camera.setAttribute('fov', fov);
-    console.log(`📷 FOV ajustado a ${fov}°`);
-  }
-  
-  // 🔥 FIX PARA FRANJA BLANCA EN DESKTOP
-  const arCanvas = document.querySelector('a-scene canvas');
-  if (arCanvas) {
-    arCanvas.style.objectFit = 'cover';
-    arCanvas.style.objectPosition = 'center center';
-    console.log('🖼️ Canvas ajustado para evitar franjas blancas');
-  }
-  
-  // Forzar fondo negro
-  document.body.style.backgroundColor = '#000';
-  if (sceneEl) {
-    sceneEl.style.background = '#000';
-  }
-});
+  // Cuando el video de AR.js esté listo
+  sceneEl.addEventListener('arjs-video-loaded', (event) => {
+    console.log('✅ Video AR.js cargado correctamente');
+    updateDetectionStatus("Cámara activa - Busca un marcador");
     
-    sceneEl.addEventListener('camera-error', (error) => {
-      console.error('❌ Error de cámara AR.js:', error);
-      updateDetectionStatus("Error: No se puede acceder a la cámara");
-    });
-  }
+    // 🔥 FIX PARA SAMSUNG DE ALTA GAMA
+    const arVideo = document.querySelector('video');
+    if (arVideo) {
+      arVideo.setAttribute('playsinline', '');
+      arVideo.style.position = 'fixed';
+      arVideo.style.top = '0';
+      arVideo.style.left = '0';
+      arVideo.style.width = '100vw';
+      arVideo.style.height = '100vh';
+      arVideo.style.objectFit = 'cover';
+      arVideo.style.objectPosition = 'center center';
+      console.log('🎥 Video ajustado para Samsung alta gama');
+    }
+    
+    // Ajustar FOV según dispositivo
+    const camera = document.querySelector('a-entity[camera]');
+    if (camera) {
+      const fov = isMobile ? 70 : 60;
+      camera.setAttribute('fov', fov);
+      console.log(`📷 FOV ajustado a ${fov}°`);
+    }
+    
+    // 🔥 FIX PARA FRANJA BLANCA EN DESKTOP
+    const arCanvas = document.querySelector('a-scene canvas');
+    if (arCanvas) {
+      arCanvas.style.objectFit = 'cover';
+      arCanvas.style.objectPosition = 'center center';
+      console.log('🖼️ Canvas ajustado para evitar franjas blancas');
+    }
+    
+    // Forzar fondo negro
+    document.body.style.backgroundColor = '#000';
+    if (sceneEl) {
+      sceneEl.style.background = '#000';
+    }
+  });
+
+  sceneEl.addEventListener('camera-error', (error) => {
+    console.error('❌ Error de cámara AR.js:', error);
+    updateDetectionStatus("Error: No se puede acceder a la cámara");
+  });
+
+  
 
   if (restartButton) {
     restartButton.addEventListener("click", () => {
       isModelPlaced = false;
       
       removeInteractiveControls();
+
+        // Mostrar cámara nuevamente y ocultar fondo
+    const modelOverlay = document.getElementById('model-overlay');
+    if (modelOverlay) {
+      modelOverlay.classList.remove('visible');
+      modelOverlay.classList.add('hidden');
+    }
+    
+    // Quitar clase para mostrar video
+    if (sceneEl) {
+      sceneEl.classList.remove('model-active');
+    }
       
       const placedModels = document.querySelectorAll('.placed-model');
       placedModels.forEach(model => {
