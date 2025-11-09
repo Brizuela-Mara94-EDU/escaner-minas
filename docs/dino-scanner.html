@@ -804,8 +804,15 @@
     let arSystem = null; 
     let trackingPaused = false; 
 
-    // Audio de rugido
-    const roarAudio = new Audio('/AppMindAr/sounds/roar.mp3');
+    // Audios de dinosaurios con nombres
+    const dinoAudios = {
+      0: new Audio('/AppMindAr/sounds/brachiosaurus-full.mp3'),
+      1: new Audio('/AppMindAr/sounds/trex-full.mp3'),
+      2: new Audio('/AppMindAr/sounds/triceratops-full.mp3'),
+      3: new Audio('/AppMindAr/sounds/velociraptor-full.mp3'),
+      4: new Audio('/AppMindAr/sounds/stegosaurio-full.mp3'),
+      5: new Audio('/AppMindAr/sounds/ankylosaurus-full.mp3')
+    };
 
     // Configuración personalizada para cada modelo
     const modelConfig = {
@@ -981,8 +988,14 @@
             return;
           }
           
-          // Rugido
-          try { roarAudio.currentTime = 0; roarAudio.play().catch(()=>{}); } catch {}
+          // Reproducir audio del dinosaurio con su nombre
+          try { 
+            const audio = dinoAudios[i];
+            if (audio) {
+              audio.currentTime = 0; 
+              audio.play().catch(()=>{}); 
+            }
+          } catch {}
           
           console.log(`✅ Marcador ${i} detectado. Bloqueando...`);
           
