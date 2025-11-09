@@ -257,6 +257,7 @@
       backdrop-filter: blur(10px);
       opacity: 0;
       transition: opacity 0.3s;
+      max-width: 300px;
     }
 
     .model-info.active {
@@ -275,6 +276,14 @@
       color: #00ff99;
       text-transform: uppercase;
       letter-spacing: 1px;
+    }
+
+    .model-description {
+      font-size: 11px;
+      color: #00ff99;
+      margin-top: 8px;
+      line-height: 1.4;
+      max-width: 250px;
     }
 
     .loading {
@@ -665,6 +674,7 @@
   <div class="model-info" id="modelInfo">
     <div class="model-name" id="modelName">Dinosaurio</div>
     <div class="model-subtitle">Barcode AR - Modelo 3D</div>
+    <div class="model-description" id="modelDescription"></div>
   </div>
 
   <div class="loading" id="loading">
@@ -794,8 +804,9 @@
     let arSystem = null; 
     let trackingPaused = false; 
 
-    // Al inicio del script (después de window.addEventListener)
+    // Audio de rugido
     const roarAudio = new Audio('/AppMindAr/sounds/roar.mp3');
+
     // Configuración personalizada para cada modelo
     const modelConfig = {
       0: { scale: 0.065, position: '0 -0.62 -1.75', rotation: '0 300 0' },   // Brachiosaurus
@@ -805,6 +816,8 @@
       4: { scale: 0.2, position: '0 -0.1 -1.5', rotation: '0 0 0' },          // Stegosaurio
       5: { scale: 0.2, position: '0 -0.1 -1.5', rotation: '0 0 0' }           // Ankylosaurus
     };
+
+    // Descripciones de modelos
     const modelDescriptions = {
       0: 'El más grande de los dinosaurios. Herbívoro de cuello largo.',
       1: 'El depredador más feroz. Rex significa rey en latín.',
@@ -842,6 +855,7 @@
       const mobileHint = document.getElementById('mobileHint');
       const modelInfo = document.getElementById('modelInfo');
       const modelName = document.getElementById('modelName');
+      const modelDescription = document.getElementById('modelDescription');
       const resetScanBtn = document.getElementById('resetScanBtn');
       
       console.log('🎬 Página cargada, esperando a que AR.js esté listo...');
@@ -963,14 +977,14 @@
       function setupMarkerEvents(marker, i) {
         
         marker.addEventListener('markerFound', function() {
-        if (trackingPaused) {
-          return;
-        }
-        
-        // Rugido
-        try { roarAudio.currentTime = 0; roarAudio.play().catch(()=>{}); } catch {}
-        
-        console.log(`✅ Marcador ${i} detectado. Bloqueando...`);
+          if (trackingPaused) {
+            return;
+          }
+          
+          // Rugido
+          try { roarAudio.currentTime = 0; roarAudio.play().catch(()=>{}); } catch {}
+          
+          console.log(`✅ Marcador ${i} detectado. Bloqueando...`);
           
           // 1. Pausar inmediatamente todo.
           trackingPaused = true; 
@@ -1031,7 +1045,7 @@
 
           // 7. Mostrar la información del modelo
           modelName.textContent = modelNames[i] || 'Dinosaurio';
-          document.getElementById('modelDescription').textContent = modelDescriptions[i] || '';
+          modelDescription.textContent = modelDescriptions[i] || '';
           modelInfo.classList.add('active');
           
           // 8. Mostrar botón de resetear
