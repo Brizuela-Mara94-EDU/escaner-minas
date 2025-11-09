@@ -179,5 +179,49 @@ body, html {
 }
 
 /* ============================================= */
-/* === PANTALLA DE INICIO AR === */
+/* === ESTILOS RESPONSIVE PARA MÓVILES === */
 /* ============================================= */
+@media (max-width: 600px) {
+
+  /* Ajustamos el padding de la tarjeta y el contenedor */
+  .welcome-container {
+    padding: 20px 10px;
+  }
+
+  .welcome-card {
+    padding: 24px;
+  }
+
+  /* Hacemos que los logos se apilen verticalmente */
+  .logos-container {
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .logo {
+    max-width: 170px; /* Hacemos los logos un poco más pequeños */
+  }
+
+  /* Reducimos el tamaño de los textos */
+  .welcome-card h2 {
+    font-size: 2.2em; /* Mucho más pequeño que 3.2em */
+    margin-bottom: 20px;
+  }
+
+  .subtitle {
+    font-size: 1.1em;
+    margin-bottom: 30px;
+  }
+
+  /* Hacemos que los botones se apilen y ocupen el ancho */
+  .theme-selector {
+    flex-direction: column;
+    width: 100%;
+    gap: 15px;
+  }
+
+  .cta-button {
+    width: 100%;
+  }
+}
