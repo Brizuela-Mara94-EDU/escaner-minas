@@ -246,7 +246,7 @@
     .model-info {
       position: fixed;
       top: 100px;
-      left: 50%;
+      left: 30%;
       transform: translateX(-50%);
       background: rgba(0,0,0,0.9);
       border: 1px solid rgba(0,255,153,0.5);
@@ -804,15 +804,7 @@
     let arSystem = null; 
     let trackingPaused = false; 
 
-    // Audios de dinosaurios con nombres
-    const dinoAudios = {
-      0: new Audio('/AppMindAr/sounds/brachiosaurus-full.mp3'),
-      1: new Audio('/AppMindAr/sounds/trex-full.mp3'),
-      2: new Audio('/AppMindAr/sounds/triceratops-full.mp3'),
-      3: new Audio('/AppMindAr/sounds/velociraptor-full.mp3'),
-      4: new Audio('/AppMindAr/sounds/stegosaurio-full.mp3'),
-      5: new Audio('/AppMindAr/sounds/ankylosaurus-full.mp3')
-    };
+
 
     // Configuración personalizada para cada modelo
     const modelConfig = {
@@ -988,14 +980,39 @@
             return;
           }
           
-          // Reproducir audio del dinosaurio con su nombre
-          try { 
-            const audio = dinoAudios[i];
-            if (audio) {
-              audio.currentTime = 0; 
-              audio.play().catch(()=>{}); 
+          // --- REEMPLAZAR AQUÍ ---
+          // Reproducir audio del dinosaurio (AHORA CON LAZY LOAD)
+          try {
+            // Mapeo de audios (ahora local)
+            const audioMap = {
+              0: '/AppMindAr/sounds/brachiosaurus-full.mp3',
+              1: '/AppMindAr/sounds/trex-full.mp3',
+              2: '/AppMindAr/sounds/triceratops-full.mp3',
+              3: '/AppMindAr/sounds/velociraptor-full.mp3',
+              4: '/AppMindAr/sounds/stegosaurio-full.mp3',
+              5: '/AppMindAr/sounds/ankylosaurus-full.mp3'
+            };
+
+            const audioSrc = audioMap[i];
+
+            if (audioSrc) {
+              // Creamos el audio SÓLO cuando se necesita
+              const audio = new Audio(audioSrc);
+              audio.currentTime = 0;
+              
+              // Importante: Manejar la promesa de play()
+              const playPromise = audio.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                  // Esto evita que el navegador bloquee el script
+                  console.error("Error al reproducir audio:", error);
+                });
+              }
             }
-          } catch {}
+          } catch (e) {
+             console.error("Error al crear audio:", e);
+          }
+          // --- FIN DEL REEMPLAZO ---
           
           console.log(`✅ Marcador ${i} detectado. Bloqueando...`);
           
