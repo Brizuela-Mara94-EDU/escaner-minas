@@ -189,23 +189,29 @@ body, html {
   }
 
   .welcome-card {
-    padding: 24px;
+    /* Reducimos el padding lateral para ganar espacio */
+    padding: 24px 15px;
   }
 
-  /* Hacemos que los logos se apilen verticalmente */
+  /* MANTENEMOS LOS LOGOS EN LÍNEA (row) */
   .logos-container {
-    flex-direction: column;
+    /* Reducimos el espacio entre logos */
     gap: 20px;
     margin-bottom: 30px;
+    
+    /* Nos aseguramos de que no se desborden */
+    max-width: 100%;
   }
 
   .logo {
-    max-width: 170px; /* Hacemos los logos un poco más pequeños */
+    /* REDUCIMOS EL TAMAÑO MÁXIMO DEL LOGO */
+    max-width: 130px; 
+    /* (Puedes ajustar este valor si quieres) */
   }
 
   /* Reducimos el tamaño de los textos */
   .welcome-card h2 {
-    font-size: 2.2em; /* Mucho más pequeño que 3.2em */
+    font-size: 2.2em;
     margin-bottom: 20px;
   }
 
@@ -214,7 +220,7 @@ body, html {
     margin-bottom: 30px;
   }
 
-  /* Hacemos que los botones se apilen y ocupen el ancho */
+  /* Apilamos los botones (esto sí es necesario) */
   .theme-selector {
     flex-direction: column;
     width: 100%;
