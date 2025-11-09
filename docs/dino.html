@@ -50,8 +50,7 @@
     </div>
     <button id="close-info-btn">✕</button>
   </div>
-  <!-- Overlay oscuro para resaltar el modelo -->
-  <div id="model-overlay" class="model-overlay hidden"></div>
+  
   <!-- Indicadores de Control Interactivo -->
   <div class="control-indicators hidden" id="control-indicators">
     <div class="control-hint">
@@ -87,45 +86,11 @@
   </div>
   
   <!-- Botones de control -->
-<button id="restart-button" class="hidden">🔄</button>
-
-<!-- AQUÍ VA LA ESCENA PRECARGADA (reemplaza solo el div#ar-container) -->
-<a-scene
-  id="scene"
-  embedded
-  vr-mode-ui="enabled: false"
-  loading-screen="enabled: false"
-  renderer="logarithmicDepthBuffer: true; precision: mediump; antialias: true;"
->
-  <!-- Assets precargados -->
-  <a-assets>
-    <a-asset-item id="brachiosaurus" crossorigin="anonymous" src="/AppMindAr/models/brachiosaurus.glb"></a-asset-item>
-    <a-asset-item id="trex" crossorigin="anonymous" src="/AppMindAr/models/trex.glb"></a-asset-item>
-    <a-asset-item id="triceratops" crossorigin="anonymous" src="/AppMindAr/models/triceratops.glb"></a-asset-item>
-    <a-asset-item id="velociraptor" crossorigin="anonymous" src="/AppMindAr/models/velociraptor.glb"></a-asset-item>
-    <a-asset-item id="stegosaurio" crossorigin="anonymous" src="/AppMindAr/models/stegosaurio.glb"></a-asset-item>
-    <a-asset-item id="ankylosaurio" crossorigin="anonymous" src="/AppMindAr/models/ankylosaurus.glb"></a-asset-item>
-  </a-assets>
-
-  <!-- Luces -->
-  <a-light type="ambient" color="#FFF" intensity="1.2"></a-light>
-  <a-light type="directional" color="#FFF" intensity="1.5" position="-1 1 1"></a-light>
-  <a-light type="directional" color="#FFF" intensity="0.8" position="1 1 -1"></a-light>
-
-  <!-- Marcadores precargados -->
-  <a-marker class="dino-marker" data-model-index="0" type="barcode" value="0" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2"></a-marker>
-  <a-marker class="dino-marker" data-model-index="1" type="barcode" value="1" emitevents="true" smooth="true" smoothCount="3" smoothTolerance="0.005" smoothThreshold="1"></a-marker>
-  <a-marker class="dino-marker" data-model-index="2" type="barcode" value="2" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2"></a-marker>
-  <a-marker class="dino-marker" data-model-index="3" type="barcode" value="3" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2"></a-marker>
-  <a-marker class="dino-marker" data-model-index="4" type="barcode" value="4" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2"></a-marker>
-  <a-marker class="dino-marker" data-model-index="5" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2"></a-marker>
-
-  <!-- Cámara -->
-  <a-entity camera></a-entity>
-</a-scene>
-
-<!-- ESTA LÍNEA SE QUEDA -->
-<div id="detection-status" class="detection-status hidden">Dino: Inactivo</div>
+  <button id="restart-button" class="hidden">🔄</button>
+  
+  <!-- Contenedor AR -->
+  <div id="ar-container"></div>
+  <div id="detection-status" class="detection-status hidden">Dino: Inactivo</div>
 
 <script>
   const startButton = document.querySelector("#start-button");
@@ -141,7 +106,7 @@
   const zoomHint = document.querySelector("#zoom-hint");
   const toggleInfoBtn = document.querySelector('#toggle-info-btn');
 
-  let sceneEl = document.getElementById('scene');
+  let sceneEl;
   let hintTimeout;
   let isModelPlaced = false;
   let currentModel = null;
@@ -218,53 +183,8 @@
   };
 
   const roarAudio = new Audio('/AppMindAr/sounds/roar.mp3');
-  // Función para detectar móvil (se evalúa dinámicamente)
-  function checkIsMobile() {
-    const userAgentMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const screenWidthMobile = window.innerWidth <= 1024;
-    const isMobile = userAgentMobile || screenWidthMobile;
-    
-    console.log('🔍 checkIsMobile():');
-    console.log('  - User Agent mobile:', userAgentMobile);
-    console.log('  - Screen width:', window.innerWidth);
-    console.log('  - Screen width mobile:', screenWidthMobile);
-    console.log('  - isMobile final:', isMobile);
-    
-    return isMobile;
-  }
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-// Llamar una vez al inicio para logging
-const isMobile = checkIsMobile();
-  
-  // ========== CONFIGURACIÓN DE LA ESCENA PRECARGADA ==========
-  // Configurar AR.js con resolución fija (como minas.html)
-  sceneEl.setAttribute('arjs', `
-    sourceType: webcam;
-    facingMode: environment;
-    detectionMode: mono_and_matrix;
-    matrixCodeType: 3x3;
-    debugUIEnabled: false;
-    maxDetectionRate: 30;
-    minConfidence: 0.5;
-    sourceWidth: 640;
-    sourceHeight: 480;
-    displayWidth: 640;
-    displayHeight: 480;
-  `);
-
-  console.log('📐 Resolución configurada: 640x480 (fija para todos los dispositivos)');
-  // ========== OCULTAR PANEL Y BOTÓN AL INICIO ==========
-console.log('🔧 Inicializando interfaz...');
-
-if (dinoInfoPanel) {
-  dinoInfoPanel.classList.add('hidden');
-  console.log('✅ Panel de información ocultado al inicio');
-}
-
-if (toggleInfoBtn) {
-  toggleInfoBtn.classList.add('hidden');
-  console.log('✅ Botón flotante ocultado al inicio');
-}
   function setupInteractiveControls(model) {
     currentModel = model;
     
@@ -275,9 +195,7 @@ if (toggleInfoBtn) {
     const pinchGesture = document.querySelector('.pinch-gesture');
     const scrollGesture = document.querySelector('.scroll-gesture');
     
-    const isMobileNow = checkIsMobile();
-
-    if (!isMobileNow) {
+    if (!isMobile) {
       rotateHint.textContent = "Clic y arrastra para girar";
       zoomHint.textContent = "Rueda del mouse para zoom";
       if (pinchGesture) pinchGesture.classList.add('hidden');
@@ -478,36 +396,19 @@ if (toggleInfoBtn) {
   }
 
   function showInfoButton() {
-  const isMobileNow = checkIsMobile();
-  
-  console.log('==========================================');
-  console.log('🔘 showInfoButton llamada');
-  console.log('  - isMobile:', isMobileNow);
-  console.log('  - toggleInfoBtn existe:', !!toggleInfoBtn);
-  
-  if (isMobileNow && toggleInfoBtn) {
-    console.log('  ✅ Condición cumplida - mostrando botón');
-    toggleInfoBtn.style.display = 'flex';
-    toggleInfoBtn.classList.remove('info-button-mobile', 'hidden');
-    toggleInfoBtn.classList.add('info-button-visible');
-    toggleInfoBtn.style.animation = 'pulseAttention 1.5s ease-in-out infinite';
-    console.log('  ✅ Botón flotante activado y parpadeando');
-    console.log('  - display:', toggleInfoBtn.style.display);
-    console.log('  - classes:', toggleInfoBtn.className);
-  } else {
-    console.log('  ❌ Condición NO cumplida');
-    console.log('    - isMobile:', isMobileNow);
-    console.log('    - toggleInfoBtn:', !!toggleInfoBtn);
+    console.log('🔘 showInfoButton llamada - isMobile:', isMobile);
+    
+    if (isMobile && toggleInfoBtn) {
+      toggleInfoBtn.classList.remove('info-button-mobile');
+      toggleInfoBtn.classList.add('info-button-visible');
+      console.log('✅ Botón flotante activado para móvil');
+    }
   }
-  console.log('==========================================');
-}
 
   function hideInfoButton() {
     if (toggleInfoBtn) {
-      toggleInfoBtn.style.display = 'none'; // Ocultar completamente
       toggleInfoBtn.classList.remove('info-button-visible');
-      toggleInfoBtn.classList.add('info-button-mobile', 'hidden');
-      toggleInfoBtn.style.animation = 'none';
+      toggleInfoBtn.classList.add('info-button-mobile');
     }
   }
 
@@ -519,110 +420,172 @@ if (toggleInfoBtn) {
     document.querySelector(".ui-overlay").style.display = "none";
     if (scanningUI) scanningUI.classList.remove("hidden");
     if (detectionStatus) detectionStatus.classList.remove("hidden");
-  
-    sceneEl.classList.add('active');
+    
+    initAR();
+  });
+
+  function initAR() {
+    if (sceneEl && sceneEl.parentNode) {
+      arContainer.removeChild(sceneEl);
+    }
+    
+    sceneEl = document.createElement('a-scene');
+    
+    const arjsConfig = [
+      `sourceType: webcam`,
+      `facingMode: environment`,
+      `detectionMode: mono_and_matrix`,
+      `matrixCodeType: 3x3`,
+      `debugUIEnabled: false`,
+      `maxDetectionRate: 30`,
+      `minConfidence: 0.5`,
+      `sourceWidth: 640`,
+      `sourceHeight: 480`,
+      `displayWidth: 640`,
+      `displayHeight: 480`
+    ].join('; ');
+    
+    sceneEl.setAttribute('arjs', arjsConfig);
+
+    sceneEl.setAttribute('vr-mode-ui', 'enabled: false');
+    sceneEl.setAttribute('embedded', '');
+    sceneEl.setAttribute('loading-screen', 'enabled: false');
+
+    arContainer.appendChild(sceneEl);
+    
+    const baseURL = `${window.location.origin}/AppMindAr/models/`;
+
+    const assets = document.createElement('a-assets');
+    assets.innerHTML = `
+      <a-asset-item id="brachiosaurus" crossorigin="anonymous" src="${baseURL}brachiosaurus.glb"></a-asset-item>
+      <a-asset-item id="trex" crossorigin="anonymous" src="${baseURL}trex.glb"></a-asset-item>
+      <a-asset-item id="triceratops" crossorigin="anonymous" src="${baseURL}triceratops.glb"></a-asset-item>
+      <a-asset-item id="velociraptor" crossorigin="anonymous" src="${baseURL}velociraptor.glb"></a-asset-item>
+      <a-asset-item id="stegosaurio" crossorigin="anonymous" src="${baseURL}stegosaurio.glb"></a-asset-item>
+      <a-asset-item id="ankylosaurio" crossorigin="anonymous" src="${baseURL}ankylosaurus.glb"></a-asset-item>
+    `;
+    sceneEl.appendChild(assets);
+
+
+
+
+    const ambientLight = document.createElement('a-light');
+    ambientLight.setAttribute('type', 'ambient');
+    ambientLight.setAttribute('color', '#FFF');
+    ambientLight.setAttribute('intensity', '1.2');
+    sceneEl.appendChild(ambientLight);
+
+    const directionalLight = document.createElement('a-light');
+    directionalLight.setAttribute('type', 'directional');
+    directionalLight.setAttribute('color', '#FFF');
+    directionalLight.setAttribute('intensity', '1.5');
+    directionalLight.setAttribute('position', '-1 1 1');
+    sceneEl.appendChild(directionalLight);
+
+    const directionalLight2 = document.createElement('a-light');
+    directionalLight2.setAttribute('type', 'directional');
+    directionalLight2.setAttribute('color', '#FFF');
+    directionalLight2.setAttribute('intensity', '0.8');
+    directionalLight2.setAttribute('position', '1 1 -1');
+    sceneEl.appendChild(directionalLight2);
+
+    for (let i = 0; i <= 5; i++) {
+      const marker = document.createElement('a-marker');
+      marker.setAttribute('class', 'dino-marker');
+      marker.setAttribute('data-model-index', i);
+      marker.setAttribute('type', 'barcode');
+      marker.setAttribute('value', i);
+      marker.setAttribute('emitevents', 'true');
+      marker.setAttribute('smooth', 'true');
+      marker.setAttribute('smoothCount', i === 1 ? '3' : '5');
+      marker.setAttribute('smoothTolerance', i === 1 ? '0.005' : '0.01');
+      marker.setAttribute('smoothThreshold', i === 1 ? '1' : '2');
+      sceneEl.appendChild(marker);
+    }
+
+    const camera = document.createElement('a-entity');
+    camera.setAttribute('camera', '');
+    sceneEl.appendChild(camera);
     
     updateDetectionStatus("Buscando marcadores...");
-    console.log('🎬 Escena AR activada');
-  });
-    // ========== EVENTOS DE LA ESCENA ==========
-  sceneEl.addEventListener('loaded', () => {
-    console.log('✅ Escena A-Frame cargada y lista');
-    
-    // Configurar eventos de marcadores
-    const markers = document.querySelectorAll('.dino-marker');
-    markers.forEach(marker => {
-      marker.addEventListener('markerFound', (event) => {
-        if (isModelPlaced) return;
-        
-        const modelIndex = marker.getAttribute('data-model-index');
-        console.log('🦖 Marcador encontrado:', modelIndex);
-        updateDetectionStatus(`¡Eureka! Dino ${modelIndex} encontrado!`);
+    isModelPlaced = false;
 
-          // Ocultar cámara y mostrar fondo sólido
-        const modelOverlay = document.getElementById('model-overlay');
-        if (modelOverlay) {
-          modelOverlay.classList.remove('hidden');
-          modelOverlay.classList.add('visible');
-        }
-        
-        // Agregar clase para ocultar video
-        if (sceneEl) {
-          sceneEl.classList.add('model-active');
-        }
-        
-        const modelConfig = modelInfo[modelIndex];
-        if (!modelConfig) return;
-        
-        const isMobileNow = checkIsMobile();
-        const scaleToUse = isMobileNow ? modelConfig.scaleMobile : modelConfig.scale;
-        const positionToUse = isMobileNow && modelConfig.positionMobile ? modelConfig.positionMobile : modelConfig.position;
-        const placedModel = document.createElement('a-entity');
-        placedModel.setAttribute('class', 'placed-model');
-        placedModel.setAttribute('gltf-model', getModelFile(modelIndex));
-        placedModel.setAttribute('scale', scaleToUse);
-        placedModel.setAttribute('data-base-scale', scaleToUse);
-        placedModel.setAttribute('rotation', modelConfig.rotation);
-        placedModel.setAttribute('animation-mixer', '');
-        
-        const camera = document.querySelector('a-entity[camera]');
-        placedModel.setAttribute('position', positionToUse);
-        camera.appendChild(placedModel);
-        
-        isModelPlaced = true;
-        currentScale = 1;
-        
-        setupInteractiveControls(placedModel);
-        
-        if (scanningUI) scanningUI.classList.add("hidden");
-        if (restartButton) restartButton.classList.remove("hidden");
-        
-        showInfoButton();
-        
-        const info = modelInfo[modelIndex];
-if (info) {
-  document.getElementById('dino-name').textContent = `${info.emoji} ${info.name}`;
-  document.getElementById('dino-description').textContent = info.description;
-  
-  console.log('🔍 Verificando dispositivo para mostrar panel...');
-console.log('   - isMobile:', isMobileNow);
-console.log('   - window.innerWidth:', window.innerWidth);
-console.log('   - dinoInfoPanel existe:', !!dinoInfoPanel);
-console.log('   - dinoInfoPanel classes antes:', dinoInfoPanel.className);
-
-if (!isMobileNow) {
-    console.log('✅ DESKTOP: Mostrando panel automáticamente');
-    dinoInfoPanel.classList.remove('hidden');
-    dinoInfoPanel.style.display = 'block';
-  } else {
-    console.log('📱 MÓVIL: Panel oculto - esperando clic en botón');
-  }
-}
-        
-        try {
-          roarAudio.currentTime = 0;
-          roarAudio.play().catch(e => console.log('Error al reproducir audio:', e));
-        } catch(e) {
-          console.log('Error con audio:', e);
-        }
-      });
+    sceneEl.addEventListener('loaded', () => {
+      updateDetectionStatus("Listo para escanear");
       
-      marker.addEventListener('markerLost', () => {
-        const modelIndex = marker.getAttribute('data-model-index');
-        console.log('Marcador perdido:', modelIndex);
+      const markers = document.querySelectorAll('.dino-marker');
+      markers.forEach(marker => {
+        marker.addEventListener('markerFound', (event) => {
+          if (isModelPlaced) return;
+          
+          const modelIndex = marker.getAttribute('data-model-index');
+          console.log('🦖 Marcador encontrado:', modelIndex);
+          updateDetectionStatus(`¡Eureka! Dino ${modelIndex} encontrado!`);
+          
+          const modelConfig = modelInfo[modelIndex];
+          if (!modelConfig) return;
+          
+          const scaleToUse = isMobile ? modelConfig.scaleMobile : modelConfig.scale;
+          const positionToUse = isMobile && modelConfig.positionMobile ? modelConfig.positionMobile : modelConfig.position;
+          
+          const placedModel = document.createElement('a-entity');
+          placedModel.setAttribute('class', 'placed-model');
+          placedModel.setAttribute('gltf-model', getModelFile(modelIndex));
+          placedModel.setAttribute('scale', scaleToUse);
+          placedModel.setAttribute('data-base-scale', scaleToUse);
+          placedModel.setAttribute('rotation', modelConfig.rotation);
+          placedModel.setAttribute('animation-mixer', '');
+          
+          const camera = document.querySelector('a-entity[camera]');
+          placedModel.setAttribute('position', positionToUse);
+          camera.appendChild(placedModel);
+          
+          isModelPlaced = true;
+          currentScale = 1;
+          
+          setupInteractiveControls(placedModel);
+          
+          if (scanningUI) scanningUI.classList.add("hidden");
+          if (restartButton) restartButton.classList.remove("hidden");
+          
+          showInfoButton();
+          
+          const info = modelInfo[modelIndex];
+          if (info) {
+            document.getElementById('dino-name').textContent = `${info.emoji} ${info.name}`;
+            document.getElementById('dino-description').textContent = info.description;
+            
+            if (!isMobile) {
+              dinoInfoPanel.classList.remove('hidden');
+              console.log('📱 Panel mostrado en desktop');
+            } else {
+              console.log('📱 Esperando interacción del botón en móvil');
+            }
+          }
+          
+          try {
+            roarAudio.currentTime = 0;
+            roarAudio.play().catch(e => console.log('Error al reproducir audio:', e));
+          } catch(e) {
+            console.log('Error con audio:', e);
+          }
+        });
+        
+        marker.addEventListener('markerLost', () => {
+          const modelIndex = marker.getAttribute('data-model-index');
+          console.log('Marcador perdido:', modelIndex);
+        });
       });
     });
-  });
 
-sceneEl.addEventListener('arjs-video-loaded', (event) => {
+    sceneEl.addEventListener('arjs-video-loaded', (event) => {
   console.log('✅ Video AR.js cargado correctamente');
   updateDetectionStatus("Cámara activa - Busca un marcador");
   
+  // --- FIX COMPLETO DE MININGTECH AR ---
   const arVideo = document.querySelector('video');
-  const arCanvas = document.querySelector('a-scene canvas');
-  const isMobileNow = checkIsMobile();
-  
-  // Ajuste del video (igual que minas.html)
+  const arCanvas = document.querySelector('.a-canvas');
+
   if (arVideo) {
     arVideo.setAttribute('playsinline', '');
     arVideo.style.position = 'fixed';
@@ -630,64 +593,49 @@ sceneEl.addEventListener('arjs-video-loaded', (event) => {
     arVideo.style.left = '0';
     arVideo.style.width = '100vw';
     arVideo.style.height = '100vh';
-    arVideo.style.objectFit = 'cover';
-    console.log('🎥 Video ajustado para pantalla completa');
+    arVideo.style.objectFit = 'contain'; // 👈 cambia 'cover' por 'contain'
+    arVideo.style.objectPosition = 'center center';
+    console.log('🎥 Cámara ajustada al tamaño completo (contain, sin zoom)');
   }
-  
-  // Ajustar aspect ratio del canvas (CLAVE PARA SAMSUNG)
+
   if (arCanvas) {
-    const updateCanvasSize = () => {
-      if (isMobileNow) {
-        arCanvas.style.objectFit = 'contain';
-        arCanvas.style.width = '100vw';
-        arCanvas.style.height = '100vh';
-      }
-      console.log('📐 Canvas aspect ratio ajustado');
-    };
-    
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
+    arCanvas.style.position = 'fixed';
+    arCanvas.style.top = '0';
+    arCanvas.style.left = '0';
+    arCanvas.style.width = '100vw';
+    arCanvas.style.height = '100vh';
+    arCanvas.style.objectFit = 'contain'; // 👈 también para el canvas
+    arCanvas.style.objectPosition = 'center center';
+    console.log('🖼️ Canvas ajustado sin zoom ni recorte');
   }
-  
-  // Ajustar FOV de la cámara
-  const camera = document.querySelector('a-entity[camera]');
+
+  // 🔧 Ajuste del FOV de la cámara (campo de visión más natural)
+  const camera = sceneEl.querySelector('[camera]');
   if (camera) {
-    const fov = isMobileNow ? 70 : 60;
+    const fov = checkIsMobile() ? 75 : 60; // más ancho en móviles
     camera.setAttribute('fov', fov);
-    console.log(`📷 FOV ajustado a ${fov}°`);
+    console.log(`📷 FOV ajustado a ${fov}° (sin recorte)`);
   }
-  
-  // Forzar fondo negro
+
+  // Forzar fondo negro (mantener tu estética)
   document.body.style.backgroundColor = '#000';
   if (sceneEl) {
     sceneEl.style.background = '#000';
   }
 });
 
-  sceneEl.addEventListener('camera-error', (error) => {
-    console.error('❌ Error de cámara AR.js:', error);
-    updateDetectionStatus("Error: No se puede acceder a la cámara");
-  });
-
-  
+    
+    sceneEl.addEventListener('camera-error', (error) => {
+      console.error('❌ Error de cámara AR.js:', error);
+      updateDetectionStatus("Error: No se puede acceder a la cámara");
+    });
+  }
 
   if (restartButton) {
     restartButton.addEventListener("click", () => {
       isModelPlaced = false;
       
       removeInteractiveControls();
-
-        // Mostrar cámara nuevamente y ocultar fondo
-    const modelOverlay = document.getElementById('model-overlay');
-    if (modelOverlay) {
-      modelOverlay.classList.remove('visible');
-      modelOverlay.classList.add('hidden');
-    }
-    
-    // Quitar clase para mostrar video
-    if (sceneEl) {
-      sceneEl.classList.remove('model-active');
-    }
       
       const placedModels = document.querySelectorAll('.placed-model');
       placedModels.forEach(model => {
@@ -754,34 +702,19 @@ sceneEl.addEventListener('arjs-video-loaded', (event) => {
 
   if (toggleInfoBtn && dinoInfoPanel) {
     toggleInfoBtn.addEventListener('click', () => {
-      console.log('🔘 Botón flotante presionado en móvil');
-      
-      // Mostrar el panel
+      console.log('🔘 Botón presionado');
       dinoInfoPanel.classList.remove('hidden');
-      dinoInfoPanel.style.display = 'block';
-      
-      // Ocultar el botón flotante
       hideInfoButton();
-      
-      console.log('✅ Panel mostrado, botón ocultado');
     });
   }
 
   if (closeInfoButton && dinoInfoPanel) {
     closeInfoButton.addEventListener('click', () => {
-      console.log('❌ Cerrando panel de información');
-      
-      // Ocultar el panel
       dinoInfoPanel.classList.add('hidden');
-      dinoInfoPanel.style.display = 'none';
       
-
-      // Mostrar el botón flotante nuevamente en móvil
-    const isMobileNow = checkIsMobile();
-    if (isMobileNow) {
-      showInfoButton();
-      console.log('🔘 Botón flotante visible nuevamente');
-    }
+      if (isMobile) {
+        showInfoButton();
+      }
     });
   }
 </script>
