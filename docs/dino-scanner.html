@@ -805,6 +805,14 @@
       4: { scale: 0.2, position: '0 -0.1 -1.5', rotation: '0 0 0' },          // Stegosaurio
       5: { scale: 0.2, position: '0 -0.1 -1.5', rotation: '0 0 0' }           // Ankylosaurus
     };
+    const modelDescriptions = {
+      0: 'El más grande de los dinosaurios. Herbívoro de cuello largo.',
+      1: 'El depredador más feroz. Rex significa rey en latín.',
+      2: 'Tiene tres cuernos característicos. Era herbívoro defensivo.',
+      3: 'Pequeño pero ágil y rápido. Cazador inteligente.',
+      4: 'Tenía placas óseas en el lomo. Herbívoro pacífico.',
+      5: 'Blindado con placas de armadura. Muy resistente.'
+    };
 
     // Mapeo de nombres de modelos
     const modelNames = {
@@ -1023,6 +1031,7 @@
 
           // 7. Mostrar la información del modelo
           modelName.textContent = modelNames[i] || 'Dinosaurio';
+          document.getElementById('modelDescription').textContent = modelDescriptions[i] || '';
           modelInfo.classList.add('active');
           
           // 8. Mostrar botón de resetear
