@@ -793,7 +793,9 @@
     let persistentModel = null;
     let arSystem = null; 
     let trackingPaused = false; 
-    
+
+    // Al inicio del script (después de window.addEventListener)
+    const roarAudio = new Audio('/AppMindAr/sounds/roar.mp3');
     // Configuración personalizada para cada modelo
     const modelConfig = {
       0: { scale: 0.065, position: '0 -0.62 -1.75', rotation: '0 300 0' },   // Brachiosaurus
@@ -953,11 +955,14 @@
       function setupMarkerEvents(marker, i) {
         
         marker.addEventListener('markerFound', function() {
-          if (trackingPaused) {
-            return;
-          }
-          
-          console.log(`✅ Marcador ${i} detectado. Bloqueando...`);
+        if (trackingPaused) {
+          return;
+        }
+        
+        // Rugido
+        try { roarAudio.currentTime = 0; roarAudio.play().catch(()=>{}); } catch {}
+        
+        console.log(`✅ Marcador ${i} detectado. Bloqueando...`);
           
           // 1. Pausar inmediatamente todo.
           trackingPaused = true; 
