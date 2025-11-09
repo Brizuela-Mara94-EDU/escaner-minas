@@ -774,7 +774,7 @@
         id="model4"
         class="ar-model"
         gltf-model="/AppMindAr/models/stegosaurio.glb" 
-        scale="0.005 0.005 0.005" 
+        scale="0.0005 0.0005 0.0005" 
         position="0 -0.1 -1.5"
         rotation="0 0 0"
       ></a-entity>
@@ -785,7 +785,7 @@
         id="model5"
         class="ar-model"
         gltf-model="/AppMindAr/models/ankylosaurus.glb" 
-        scale="0.005 0.005 0.005" 
+        scale="0.0005 0.0005 0.0005" 
         position="0 -0.1 -1.5"
         rotation="0 0 0"
       ></a-entity>
@@ -980,17 +980,16 @@
             return;
           }
           
-          // --- REEMPLAZAR AQUÍ ---
           // Reproducir audio del dinosaurio (AHORA CON LAZY LOAD)
           try {
             // Mapeo de audios (ahora local)
             const audioMap = {
-              0: '/AppMindAr/sounds/brachiosaurus-full.mp3',
-              1: '/AppMindAr/sounds/trex-full.mp3',
-              2: '/AppMindAr/sounds/triceratops-full.mp3',
-              3: '/AppMindAr/sounds/velociraptor-full.mp3',
-              4: '/AppMindAr/sounds/stegosaurio-full.mp3',
-              5: '/AppMindAr/sounds/ankylosaurus-full.mp3'
+              0: '/AppMindAr/sounds/brachiosaurus.mp3',
+              1: '/AppMindAr/sounds/trex.mp3',
+              2: '/AppMindAr/sounds/triceratops.mp3',
+              3: '/AppMindAr/sounds/velociraptor.mp3',
+              4: '/AppMindAr/sounds/stegosaurio.mp3',
+              5: '/AppMindAr/sounds/ankylosaurus.mp3'
             };
 
             const audioSrc = audioMap[i];
