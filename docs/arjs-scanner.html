@@ -252,7 +252,7 @@
       border: 1px solid rgba(21,59,130,0.5);
       border-radius: 10px;
       padding: 16px 28px;
-      z-index: 20;
+      z-index: 30;
       text-align: center;
       backdrop-filter: blur(10px);
       opacity: 0;
@@ -611,6 +611,30 @@
         font-size: 12px;
       }
     }
+    /* Ajustes para dispositivos en modo horizontal (landscape) - evitar que el cartel del nombre tape el modelo */
+    @media (orientation: landscape) and (max-width: 1024px) {
+      .model-info {
+        /* Sitúa el cuadro cerca de la esquina inferior izquierda, encima del botón "Escanear otro" */
+        top: auto;
+        bottom: 170px; /* un poco por encima del botón (ajustable) */
+        left: 20px;
+        right: auto;
+        transform: none;
+        text-align: left;
+        padding: 12px 16px;
+        border-radius: 8px;
+        min-width: 160px;
+        max-width: 42vw;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+      }
+
+      /* Asegurar que el botón de reset/escaneo quede debajo visualmente */
+      .reset-scan-btn {
+        bottom: 100px; /* mantiene la posición original del botón */
+        left: 20px;
+        z-index: 20;
+      }
+    }
     #arjs-video {
     position: fixed !important;
     top: 0 !important;
@@ -718,7 +742,7 @@
       <a-entity 
         id="model20"
         class="ar-model"
-        gltf-model="/AppMindAr/models/lamp.glb" 
+        gltf-model="" 
         scale="0.5 0.5 0.5" 
         position="0 0 0"
         rotation="-90 0 0"
@@ -729,7 +753,7 @@
       <a-entity 
         id="model21"
         class="ar-model"
-        gltf-model="/AppMindAr/models/pico.glb" 
+        gltf-model="" 
         scale="0.5 0.5 0.5" 
         position="0 0 0"
         rotation="-90 0 0"
@@ -740,7 +764,7 @@
       <a-entity 
         id="model22"
         class="ar-model"
-        gltf-model="/AppMindAr/models/truck.glb" 
+        gltf-model="" 
         scale="0.5 0.5 0.5" 
         position="0 0 0"
         rotation="-90 0 0"
@@ -751,7 +775,7 @@
       <a-entity 
         id="model23"
         class="ar-model"
-        gltf-model="/AppMindAr/models/tunel.glb" 
+        gltf-model="" 
         scale="0.5 0.5 0.5" 
         position="0 0 0"
         rotation="-90 0 0"
@@ -762,7 +786,7 @@
       <a-entity 
         id="model24"
         class="ar-model"
-        gltf-model="/AppMindAr/models/garras.glb" 
+        gltf-model="" 
         scale="0.5 0.5 0.5" 
         position="0 0 0"
         rotation="-90 0 0"
@@ -773,7 +797,7 @@
       <a-entity 
         id="model25"
         class="ar-model"
-        gltf-model="/AppMindAr/models/perforadora.glb" 
+        gltf-model="" 
         scale="0.5 0.5 0.5" 
         position="0 0 0"
         rotation="-90 0 0"
@@ -784,7 +808,7 @@
       <a-entity 
         id="model26"
         class="ar-model"
-        gltf-model="/AppMindAr/models/carga.glb" 
+        gltf-model="" 
         scale="0.5 0.5 0.5" 
         position="0 0 0"
         rotation="-90 0 0"
@@ -795,7 +819,7 @@
       <a-entity 
         id="model27"
         class="ar-model"
-        gltf-model="/AppMindAr/models/oro.glb" 
+        gltf-model="" 
         scale="0.5 0.5 0.5" 
         position="0 0 0"
         rotation="-90 0 0"
@@ -806,7 +830,7 @@
       <a-entity 
         id="model28"
         class="ar-model"
-        gltf-model="/AppMindAr/models/wolframita.glb" 
+        gltf-model="" 
         scale="0.5 0.5 0.5" 
         position="0 50 0"
         rotation="-90 0 0"
@@ -817,7 +841,40 @@
       <a-entity 
         id="model29"
         class="ar-model"
-        gltf-model="/AppMindAr/models/renderamarillo.glb" 
+        gltf-model="" 
+        scale="0.5 0.5 0.5" 
+        position="0 0 0"
+        rotation="-90 0 0"
+      ></a-entity>
+    </a-marker>
+
+    <a-marker id="marker30" type="barcode" value="30">
+      <a-entity 
+        id="model30"
+        class="ar-model"
+        gltf-model="" 
+        scale="0.5 0.5 0.5" 
+        position="0 0 0"
+        rotation="-90 0 0"
+      ></a-entity>
+    </a-marker>
+
+    <a-marker id="marker31" type="barcode" value="31">
+      <a-entity 
+        id="model31"
+        class="ar-model"
+        gltf-model="" 
+        scale="0.5 0.5 0.5" 
+        position="0 0 0"
+        rotation="-90 0 0"
+      ></a-entity>
+    </a-marker>
+
+    <a-marker id="marker32" type="barcode" value="32">
+      <a-entity 
+        id="model32"
+        class="ar-model"
+        gltf-model="" 
         scale="0.5 0.5 0.5" 
         position="0 0 0"
         rotation="-90 0 0"
@@ -828,6 +885,28 @@
   </a-scene>
 
   <script>
+    // ✅ Configurar modelos al inicio
+    window.addEventListener('DOMContentLoaded', () => {
+      const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      const BASE_PATH = isProduction ? '/AppMindAr' : '';
+      
+      // Asignar modelos a cada marcador
+      for (let i = 20; i <= 32; i++) {
+        const modelEntity = document.getElementById(`model${i}`);
+        if (modelEntity) {
+          modelEntity.setAttribute('gltf-model', `${BASE_PATH}/models/${getModelName(i)}.glb`);
+        }
+      }
+    });
+    
+    function getModelName(id) {
+      const names = {
+        20: 'lamp', 21: 'pico', 22: 'truck', 23: 'tunel', 24: 'garras',
+        25: 'perforadora', 26: 'carga', 27: 'oro', 28: 'wolframita',
+        29: 'renderamarillo', 30: 'tornillo', 31: 'tolva', 32: 'rueda'
+      };
+      return names[id] || 'lamp';
+    }
     // Estado global
     let currentModel = null;
     let currentScale = 0.5;
@@ -836,6 +915,10 @@
     let persistentModel = null;
     let arSystem = null; 
     let trackingPaused = false; 
+    
+    // ✅ Detectar entorno
+    const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    const BASE_PATH = isProduction ? '/AppMindAr' : '';
     
     // Configuración personalizada para cada modelo
     const modelConfig = {
@@ -848,7 +931,10 @@
       26: { scale: 0.5, position: '0 -0.5 -3', rotation: '0 -90 0' },   // Carga: 90° arriba
       27: { scale: 0.004, position: '0 -0.2 -3', rotation: '0 0 0' }, // Oro: mucho más chico
       28: { scale: 0.7, position: '0 0.5 -9', rotation: '0 0 0' },  // Wolframita: 20%, más arriba
-      29: { scale: 0.1, position: '0 -0.5 -2', rotation: '0 -90 0' }  // Render Amarillo (sin cambios)
+      29: { scale: 0.1, position: '0 -0.5 -2', rotation: '0 -90 0' },  // Render Amarillo
+      30: { scale: 2, position: '0 0 -5', rotation: '0 0 0' },  // Tornillo de Arquímedes
+      31: { scale: 2, position: '0 -0.5 -6', rotation: '0 0 0' },  // Tolva
+      32: { scale: 1.2, position: '0 -0.4 -4', rotation: '180 0 0' }   // Rueda
     };
 
     // Mapeo de nombres de modelos
@@ -862,21 +948,27 @@
       26: 'Camión de Carga',
       27: 'Mineral de Oro',
       28: 'Wolframita',
-      29: 'Excavadora Amarilla'
+      29: 'Excavadora Amarilla',
+      30: 'Tornillo de Arquímedes',
+      31: 'Tolva de Almacenamiento',
+      32: 'Rueda'
     };
     
     // --- CAMBIO 1: Mover el mapa de modelos aquí para que sea global ---
     const markerModels = {
-      20: '/AppMindAr/models/lamp.glb',
-      21: '/AppMindAr/models/pico.glb',
-      22: '/AppMindAr/models/truck.glb',
-      23: '/AppMindAr/models/tunel.glb',
-      24: '/AppMindAr/models/garras.glb',
-      25: '/AppMindAr/models/perforadora.glb',
-      26: '/AppMindAr/models/carga.glb',
-      27: '/AppMindAr/models/oro.glb',
-      28: '/AppMindAr/models/wolframita.glb',
-      29: '/AppMindAr/models/renderamarillo.glb'
+      20: `${BASE_PATH}/models/lamp.glb`,
+      21: `${BASE_PATH}/models/pico.glb`,
+      22: `${BASE_PATH}/models/truck.glb`,
+      23: `${BASE_PATH}/models/tunel.glb`,
+      24: `${BASE_PATH}/models/garras.glb`,
+      25: `${BASE_PATH}/models/perforadora.glb`,
+      26: `${BASE_PATH}/models/carga.glb`,
+      27: `${BASE_PATH}/models/oro.glb`,
+      28: `${BASE_PATH}/models/wolframita.glb`,
+      29: `${BASE_PATH}/models/renderamarillo.glb`,
+      30: `${BASE_PATH}/models/tornillo.glb`,
+      31: `${BASE_PATH}/models/tolva.glb`,
+      32: `${BASE_PATH}/models/rueda.glb`
     };
 
 
@@ -933,7 +1025,7 @@
           
           // RECREAR todos los marcadores en el DOM
           console.log('🔓 Recreando marcadores...');
-          const markerIds = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29];
+          const markerIds = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32];
           
           markerIds.forEach(id => {
             // Crear nuevo marcador
@@ -1047,7 +1139,7 @@
           
           // 4. Ahora, ELIMINAR todos los marcadores del DOM
           console.log('Eliminando todos los marcadores del DOM...');
-          const allMarkerIds = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29];
+          const allMarkerIds = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32];
           allMarkerIds.forEach(markerId => {
             const markerEl = document.getElementById(`marker${markerId}`);
             if (markerEl) {
@@ -1098,7 +1190,7 @@
       }
       
       // --- CAMBIO 5: Bucle de carga inicial actualizado ---
-      const markerIds = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29];
+      const markerIds = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32];
       
       markerIds.forEach(i => {
         const marker = document.getElementById(`marker${i}`);
