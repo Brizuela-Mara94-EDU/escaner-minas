@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>SIED - UNSJ | Realidad Aumentada</title>
 
   <link rel="icon" type="image/png" href="/AppMindAr/assets/LOGO%20SIED%20SOLO-01-BluIfg0u.png">
@@ -16,10 +16,13 @@
 html, body {
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow: hidden; /* Evita el scroll */
   font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   background-color: #ffffff; 
+  /* Usamos dvh (dynamic viewport height) para evitar problemas con la barra de URL del navegador */
   height: 100vh;
+  height: 100dvh; 
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -27,32 +30,33 @@ html, body {
 /* ⭐ Header */
 header {
   background: #ffffff;
-  height: 90px;
+  /* Altura fija responsiva */
+  height: 80px;
   width: 100%;
   display: flex;
   align-items: center;
-  padding: 0 8%; 
   justify-content: flex-start;
+  padding: 0 8%; 
   z-index: 10;
-  flex-shrink: 0;
+  flex-shrink: 0; /* El header NO se achica */
   border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 .logos-container {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 25px;
 }
 
 .logos-container img {
-  height: 65px; 
+  height: 60px; 
   width: auto;
   display: block;
 }
 
-/* ⭐ MAIN */
+/* ⭐ MAIN (El cuerpo principal) */
 main {
-  flex-grow: 1;
+  flex-grow: 1; /* Ocupa todo el espacio disponible */
   position: relative;
   display: flex;
   align-items: center;
@@ -65,17 +69,17 @@ main {
   z-index: 1;
 }
 
-/* Sección Texto */
+/* Sección Texto (Izquierda en PC, Arriba en Móvil) */
 .left-content {
   flex: 1;
   max-width: 550px;
   z-index: 2;
-  margin-top: -60px;
+  margin-top: -60px; /* Ajuste visual desktop */
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+  font-size: clamp(2rem, 4vw, 3.8rem);
   font-weight: 800;
   color: #033773;
   line-height: 1.1;
@@ -83,15 +87,15 @@ h1 {
 }
 
 .desc {
-  font-size: clamp(1.05rem, 1.2vw, 1.2rem);
+  font-size: clamp(1rem, 1.2vw, 1.2rem);
   color: #444;
   line-height: 1.5;
-  margin-top: 20px;
+  margin-top: 15px;
   max-width: 520px;
 }
 
 .hint-text {
-  margin-top: 25px;
+  margin-top: 20px;
   font-size: 0.95rem;
   color: #033773;
   font-weight: 700;
@@ -101,7 +105,7 @@ h1 {
   opacity: 0.9;
 }
 
-/* Sección Visual (Desktop) */
+/* Sección Visual (Cubo) */
 .right-content {
   flex: 1;
   height: 100%;
@@ -119,14 +123,15 @@ h1 {
 
 /* ⭐ Footer */
 footer {
-  background: #ffffff;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(5px);
   text-align: center;
   font-size: 0.8rem;
   color: #033773;
   opacity: .9;
-  padding: 12px 0;
+  padding: 10px 0;
   z-index: 3;
-  flex-shrink: 0;
+  flex-shrink: 0; /* El footer NO se achica */
   border-top: 1px solid rgba(0,0,0,0.05);
 }
 
@@ -140,67 +145,65 @@ footer {
   z-index: 0;
 }
 
-/* RESPONSIVE MÓVIL */
+/* =========================================
+   📱 RESPONSIVE MÓVIL (ARREGLADO)
+   ========================================= */
 @media(max-width: 900px) {
+  
   header {
-    height: 80px;
+    height: 70px; /* Header un poco más compacto */
     padding: 0 20px;
-    justify-content: center;
+    justify-content: center; /* Logos centrados en móvil */
   }
   
-  .logos-container img {
-    height: 50px; 
-    gap: 15px;
-  }
+  .logos-container { gap: 15px; }
+  .logos-container img { height: 45px; } /* Logos ajustados */
   
   main {
-    flex-direction: column;
+    flex-direction: column; /* Columna vertical */
     text-align: center;
-    padding: 15px 20px 0 20px;
+    padding: 10px 20px 0 20px;
     justify-content: flex-start; 
     gap: 0; 
   }
 
+  /* 1. TEXTO: Ocupa solo lo necesario (flex-grow: 0) */
   .left-content {
-    margin-top: 10px;
+    margin-top: 5px;
     margin-bottom: 5px;
-    flex: 0 0 auto;
+    flex: 0 0 auto; 
     width: 100%;
+    z-index: 5;
   }
 
-  h1 { font-size: 1.9rem; line-height: 1.1; }
-  .desc { font-size: 0.95rem; margin-top: 8px; margin-bottom: 0; }
-  .hint-text { justify-content: center; margin-top: 10px; margin-bottom: 5px; }
+  /* Tipografía ajustada para ganar espacio para el cubo */
+  h1 { font-size: 1.7rem; line-height: 1.1; }
+  .desc { font-size: 0.9rem; margin-top: 8px; margin-bottom: 0; }
+  .hint-text { justify-content: center; margin-top: 10px; font-size: 0.85rem;}
   
+  /* 2. CUBO: Ocupa TODO el espacio sobrante (flex-grow: 1) */
   .right-content {
     order: 2;
     width: 100%;
-    flex: 1; 
+    flex: 1; /* Esto hace la magia: llena el hueco hasta el footer */
     display: flex;
-    align-items: center;
-    min-height: 0;
+    align-items: center; 
+    justify-content: center;
+    min-height: 0; /* Permite que el contenedor se achique si es necesario */
     margin-bottom: 0;
   }
   
   #cube-wrapper {
     width: 100%;
-    height: 100%;
-    max-height: 50vh;
-  }
-
-  footer {
-    padding: 10px 0;
-    position: relative;
-    background: rgba(255,255,255,0.6);
-    backdrop-filter: blur(5px);
+    height: 100%; 
   }
 }
 
-/* ✅ BOTÓN AYUDA (Centrado perfecto con Flexbox) */
+/* Botón Ayuda */
 #help-btn {
   position: fixed;
   bottom: 50px;
-  right: 25px;
+  right: 20px;
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -212,12 +215,10 @@ footer {
   cursor: pointer;
   box-shadow: 0 6px 15px rgba(0,0,0,0.25);
   z-index: 40;
-  padding: 0; /* Importante para que no afecte el centrado */
-  
-  /* Flexbox para centrar el signo de pregunta */
+  padding: 0;
   display: flex;
-  justify-content: center; /* Horizontal */
-  align-items: center;     /* Vertical */
+  justify-content: center; 
+  align-items: center;     
 }
 
 /* Modal */
@@ -294,10 +295,9 @@ footer {
   </div>
 </div>
 
-
 <script>
 /* ============================================================
-    1) FUNCIÓN PARA IMAGEN + TEXTO (DEBE IR ARRIBA)
+    1) FUNCIÓN PARA IMAGEN + TEXTO
 ============================================================ */
 function createImageWithCenteredText(imageUrl, text) {
   const c = document.createElement("canvas");
@@ -335,10 +335,8 @@ function createImageWithCenteredText(imageUrl, text) {
   return texture;
 }
 
-
-
 /* ============================================================
-    2) TEXTURA DE SOLO TEXTO (LA TUYA ORIGINAL)
+    2) TEXTURA DE SOLO TEXTO
 ============================================================ */
 function createTextTexture(text, bg, color="#fff") {
   const c = document.createElement("canvas");
@@ -391,15 +389,7 @@ light.position.set(6, 6, 4);
 scene.add(light);
 
 /* ============================================================
-    4) COLORES
-============================================================ */
-const dinos="#26732B",
-      minas="#154290",
-      astro="#A61C81",
-      bio="#779B2C";
-
-/* ============================================================
-    5) MATERIALES — CON ASTRO USANDO IMAGEN
+    5) MATERIALES
 ============================================================ */
 async function loadMaterials() {
   return [
@@ -407,36 +397,23 @@ async function loadMaterials() {
     new THREE.MeshStandardMaterial({ map: createImageWithCenteredText("assets/minas.jpeg", "Minas") }),
     new THREE.MeshStandardMaterial({ map: createTextTexture("", "#033773") }),
     new THREE.MeshStandardMaterial({ map: createTextTexture("", "#033773") }),
-
-    new THREE.MeshStandardMaterial({
-    map: createImageWithCenteredText("assets/astro.jpeg", "Astro")
-  }),
-
+    new THREE.MeshStandardMaterial({ map: createImageWithCenteredText("assets/astro.jpeg", "Astro") }),
     new THREE.MeshStandardMaterial({ map: createImageWithCenteredText("assets/bio.jpeg", "Bio") }),
   ];
 }
 
 /* ============================================================
-    6) CREAR CUBO CUANDO MATERIALES ESTÁN LISTOS
+    6) CREAR CUBO
 ============================================================ */
 async function initCube() {
   const materials = await loadMaterials();
 
-  const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(3.4, 3.4, 3.4),
-    materials
-  );
+  // Ajusté ligeramente el tamaño del cubo a 3.2 para que se vea mejor en mobile
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.2, 3.2), materials);
   scene.add(cube);
 
   /* CLICK / TOUCH / INTERACCIÓN */
-  const routes = [
-    "dino-scanner.html",
-    "minas.html",
-    "",
-    "",
-    "",
-    ""
-  ];
+  const routes = ["dino-scanner.html", "minas.html", "", "", "", ""];
 
   const ray = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -455,31 +432,19 @@ async function initCube() {
     }
   }
 
-  renderer.domElement.addEventListener("click", (e) => {
-    detect(e.clientX, e.clientY);
-  });
-
+  renderer.domElement.addEventListener("click", (e) => detect(e.clientX, e.clientY));
   renderer.domElement.addEventListener("touchend", (e) => {
-    if (e.changedTouches[0]) {
-      detect(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-    }
+    if (e.changedTouches[0]) detect(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
   });
-
   renderer.domElement.addEventListener("pointermove", (e) => {
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.x = ((e.clientX - rect.left) / rect.width) *2 - 1;
     pointer.y = -((e.clientY - rect.top) / rect.height)*2 +1;
-
     ray.setFromCamera(pointer, camera);
     const hit = ray.intersectObject(cube);
-
-    renderer.domElement.style.cursor =
-      hit.length && routes[hit[0].face.materialIndex]
-      ? "pointer"
-      : "grab";
+    renderer.domElement.style.cursor = hit.length && routes[hit[0].face.materialIndex] ? "pointer" : "grab";
   });
 
-  /* ANIMACIÓN */
   function animate() {
     requestAnimationFrame(animate);
     controls.update();
@@ -491,7 +456,7 @@ async function initCube() {
 initCube();
 
 /* ============================================================
-    7) RESIZE AUTOMÁTICO DEL CUBO
+    7) RESIZE AUTOMÁTICO
 ============================================================ */
 const resizeObserver = new ResizeObserver(() => {
   const w = container.clientWidth;
@@ -554,17 +519,11 @@ const helpBtn = document.getElementById("help-btn");
 const helpModal = document.getElementById("help-modal");
 const closeHelp = document.getElementById("close-help");
 
-helpBtn.addEventListener("click", () => {
-  helpModal.style.display = "flex";
-});
-closeHelp.addEventListener("click", () => {
-  helpModal.style.display = "none";
-});
+helpBtn.addEventListener("click", () => { helpModal.style.display = "flex"; });
+closeHelp.addEventListener("click", () => { helpModal.style.display = "none"; });
 helpModal.addEventListener("click", (e) => {
   if (e.target === helpModal) helpModal.style.display = "none";
 });
 </script>
-
-
 </body>
 </html>
