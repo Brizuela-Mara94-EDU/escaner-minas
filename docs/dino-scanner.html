@@ -799,7 +799,16 @@
       ></a-entity>
     </a-marker>
 
-    <a-entity camera></a-entity>
+   <a-entity
+      id="mainCamera"
+      camera
+      look-controls
+      near="0.01"
+      far="2500"
+      fov="70"
+      position="0 1.6 0">
+    </a-entity>
+
   </a-scene>
 
   <script>
