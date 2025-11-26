@@ -1054,7 +1054,9 @@
           persistentModel.setAttribute('position', config.position);
           persistentModel.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
           persistentModel.setAttribute('rotation', `${currentRotation.x} ${currentRotation.y} ${currentRotation.z}`);
-          
+          if (i === 4 || i === 5) {   // Stegosaurio y Ankylosaurus
+            autoFitModelToCamera(persistentModel, 1.4);
+          }
           // 4. ELIMINAR todos los marcadores del DOM
           console.log('Eliminando todos los marcadores del DOM...');
           const allMarkerIds = [0, 1, 2, 3, 4, 5];
@@ -1218,6 +1220,27 @@
       if (captureBtnMobile) {
         captureBtnMobile.addEventListener('click', captureScreenshot);
       }
+
+      function autoFitModelToCamera(modelEl, targetSize = 1.2) {
+        modelEl.addEventListener('model-loaded', () => {
+
+          const object3D = modelEl.getObject3D('mesh');
+          if (!object3D) return;
+
+          const box = new THREE.Box3().setFromObject(object3D);
+          const size = new THREE.Vector3();
+          box.getSize(size);
+
+          const maxDimension = Math.max(size.x, size.y, size.z);
+          const scaleFactor = targetSize / maxDimension;
+
+          modelEl.setAttribute('scale', `${scaleFactor} ${scaleFactor} ${scaleFactor}`);
+          modelEl.setAttribute('position', `0 ${-size.y * scaleFactor / 2} -2`);
+
+          console.log('✅ AutoFit aplicado:', { size, scaleFactor });
+        });
+      }
+
 
       // Función de captura de screenshot
       function captureScreenshot() {
