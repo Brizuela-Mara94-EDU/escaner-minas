@@ -1,29 +1,553 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/assets/LOGO SIED SOLO-01.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SIED - UNSJ | Realidad Aumentada</title>
-    <link rel="stylesheet" href="/style.css" />
-    
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>SIED - UNSJ | Realidad Aumentada</title>
+
+  <link rel="icon" type="image/png" href="assets/LOGO SIED SOLO-01.png">
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/examples/js/controls/OrbitControls.js"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background-color: #ffffff; 
+  height: 100vh;
+  height: 100dvh; 
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ⭐ Header */
+header {
+  background: #ffffff;
+  height: 80px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 8%; 
+  z-index: 10;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.logos-container {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.logos-container img {
+  height: 60px; 
+  width: auto;
+  display: block;
+}
+
+/* ⭐ MAIN (Escritorio por defecto: Lado a Lado) */
+main {
+  flex-grow: 1;
+  position: relative;
+  display: flex;
+  flex-direction: row; /* Lado a lado por defecto */
+  align-items: center;
+  justify-content: center;
+  padding: 0 8%;
+  gap: 5%;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #ffffff 10%, #cedffc 100%);
+  box-shadow: inset 0 0 80px rgba(3, 55, 115, 0.06);
+  z-index: 1;
+}
+
+/* Sección Texto */
+.left-content {
+  flex: 1;
+  max-width: 550px;
+  z-index: 2;
+  /* En escritorio sube un poco para centrar visualmente */
+  margin-top: -40px; 
+}
+
+h1 {
+  margin: 0;
+  /* Clamp ajustado para que no sea chico en tablets */
+  font-size: clamp(2.5rem, 5vw, 4rem); 
+  font-weight: 800;
+  color: #033773;
+  line-height: 1.1;
+  text-shadow: 0 5px 15px rgba(3, 55, 115, 0.08);
+}
+
+.desc {
+  font-size: clamp(1.1rem, 1.5vw, 1.3rem); /* Texto un poco más grande base */
+  color: #444;
+  line-height: 1.5;
+  margin-top: 20px;
+  max-width: 550px;
+}
+
+.hint-text {
+  margin-top: 25px;
+  font-size: 1rem;
+  color: #033773;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.9;
+}
+
+/* Sección Visual (Cubo) */
+.right-content {
+  flex: 1.2; /* El cubo tiene prioridad de espacio */
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+#cube-wrapper {
+  width: 100%;
+  height: 85vh;
+}
+
+/* ⭐ Footer */
+footer {
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(5px);
+  text-align: center;
+  font-size: 0.85rem;
+  color: #033773;
+  opacity: .9;
+  padding: 10px 0;
+  z-index: 3;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+/* ⭐ Partículas */
+#particles {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* =========================================
+   📱 MÓVIL VERTICAL (PORTRAIT)
+   ========================================= */
+@media (max-width: 900px) and (orientation: portrait) {
+  header { height: 70px; justify-content: center; }
+  .logos-container { gap: 15px; }
+  .logos-container img { height: 45px; }
+
+  main {
+    flex-direction: column; /* Apilado vertical */
+    text-align: center;
+    padding: 15px 20px 0 20px;
+    justify-content: flex-start;
+    gap: 0;
+  }
+
+  .left-content {
+    margin-top: 10px;
+    margin-bottom: 5px;
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  /* Textos ajustados para móvil vertical */
+  h1 { font-size: 2rem; }
+  .desc { font-size: 1rem; margin-top: 8px; margin-bottom: 0; }
+  .hint-text { justify-content: center; margin-top: 10px; }
+
+  .right-content {
+    order: 2;
+    width: 100%;
+    flex: 1;
+    margin-bottom: 0;
+  }
+  
+  #cube-wrapper { height: 100%; }
+}
+
+/* =========================================
+   📱 MÓVIL HORIZONTAL (LANDSCAPE) - LA SOLUCIÓN
+   ========================================= */
+@media (max-width: 900px) and (orientation: landscape) {
+  /* 1. Achicamos el header para ganar altura */
+  header { 
+    height: 50px; 
+    padding: 0 15px;
+  }
+  .logos-container img { height: 35px; }
+
+  /* 2. Volvemos al diseño LADO A LADO (Row) */
+  main {
+    flex-direction: row; 
+    align-items: center;
+    padding: 0 10px;
+    gap: 10px;
+  }
+
+  /* 3. Texto a la izquierda, más compacto */
+  .left-content {
+    width: 45%; 
+    flex: 0 0 45%; /* Ancho fijo */
+    text-align: left; /* Alineado izq */
+    margin-top: 0;
+    padding-left: 10px;
+  }
+
+  h1 { font-size: 1.6rem; margin-bottom: 5px; }
+  /* Ocultamos la descripción larga si molesta, o la hacemos chica */
+  .desc { 
+    font-size: 0.85rem; 
+    line-height: 1.2;
+    margin-top: 5px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Max 3 lineas */
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+  }
+  .hint-text { margin-top: 8px; font-size: 0.8rem; justify-content: flex-start;}
+
+  /* 4. Cubo a la derecha, GRANDE */
+  .right-content {
+    width: 55%;
+    flex: 1;
+    height: 100%; /* Ocupa toda la altura disponible */
+  }
+  #cube-wrapper { height: 100%; }
+
+  /* Footer minimalista o oculto si es muy bajo */
+  footer { padding: 5px 0; font-size: 0.7rem; }
+}
+
+
+/* =========================================
+   TABLETS (iPad, etc)
+   ========================================= */
+@media (min-width: 600px) and (max-width: 1024px) and (orientation: portrait) {
+   /* Aumentamos texto para que no se vea chico en tablet */
+   h1 { font-size: 3.5rem; }
+   .desc { font-size: 1.4rem; }
+   .logos-container img { height: 60px; }
+}
+
+
+/* Botón Ayuda */
+#help-btn {
+  position: fixed;
+  bottom: 50px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #033773;
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+  z-index: 40;
+  padding: 0;
+  display: flex;
+  justify-content: center; 
+  align-items: center;     
+}
+
+/* Ajuste botón ayuda en Landscape móvil */
+@media (max-width: 900px) and (orientation: landscape) {
+  #help-btn { bottom: 15px; right: 15px; width: 35px; height: 35px; font-size: 1rem; }
+}
+
+/* Modal */
+#help-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+.help-box {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+}
+.help-box h3 { margin-top: 0; color: #033773; font-size: 1.2rem;}
+#close-help {
+  margin-top: 15px;
+  background: #033773;
+  color: #fff;
+  padding: 8px 25px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+</style>
 </head>
+
 <body>
-<div class="welcome-container">
-    <div class="welcome-card">
-        <div class="logos-container">
-            <img src="/assets/logo UNSJ horizontal-02.png" alt="Logo UNSJ" class="logo">
-            <img src="/assets/logo sied horizontal-02.png" alt="Logo SIED" class="logo">
-        </div>
-        
-        <h2>Proyecto Realidad Aumentada</h2>
-        <p class="subtitle">Selecciona un tema para explorar en Realidad Aumentada</p>
-        
-        <div class="theme-selector">
-            <a href="dino.html" class="cta-button">🦕 Dinosaurios</a>
-            <a href="minas.html" class="cta-button">Explorar Minería en RA</a>
-        </div>
+
+<header>
+  <div class="logos-container">
+    <img src="assets/logo UNSJ horizontal-02.png" class="logo-unsj" alt="UNSJ" />
+    <img src="assets/LOGO SIED SOLO-01.png" class="logo-sied" alt="SIED" />
+  </div>
+</header>
+
+<main>
+  <canvas id="particles"></canvas>
+
+  <div class="left-content">
+    <h1>Explorá en Realidad Aumentada</h1>
+    
+    <p class="desc">
+      Accedé a contenido educativo exclusivo de la UNSJ mediante realidad aumentada. Explorá, aprendé y descubrí de una forma nueva.
+    </p>
+    
+    <div class="hint-text">
+      <span>►</span> Girá el cubo para comenzar
     </div>
+  </div>
+
+  <div class="right-content">
+    <div id="cube-wrapper"></div>
+  </div>
+</main>
+
+<footer>© 2025 SIED - Universidad Nacional de San Juan</footer>
+
+<div id="help-btn">?</div>
+<div id="help-modal">
+  <div class="help-box">
+    <h3>¿Cómo funciona?</h3>
+    <p>Girá el cubo, tocá una cara y comenzá a explorar.</p>
+    <button id="close-help">Cerrar</button>
+  </div>
 </div>
+
+<script>
+/* ============================================================
+    1) FUNCIÓN PARA IMAGEN + TEXTO
+============================================================ */
+function createImageWithCenteredText(imageUrl, text) {
+  const c = document.createElement("canvas");
+  c.width = 1024;
+  c.height = 1024;
+  const ctx = c.getContext("2d");
+
+  const img = new Image();
+  img.src = imageUrl;
+  img.crossOrigin = "anonymous";
+
+  const texture = new THREE.CanvasTexture(c);
+
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, 1024, 1024);
+    const bannerHeight = 220;
+    const bannerY = (1024 - bannerHeight) / 2;
+
+    ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+    ctx.fillRect(0, bannerY, 1024, bannerHeight);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 140px Segoe UI, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, 512, bannerY + bannerHeight / 2);
+    texture.needsUpdate = true;
+  };
+
+  return texture;
+}
+
+/* ============================================================
+    2) TEXTURA DE SOLO TEXTO
+============================================================ */
+function createTextTexture(text, bg, color="#fff") {
+  const c = document.createElement("canvas");
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext("2d");
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,512,512);
+
+  ctx.fillStyle = color;
+  ctx.font = "bold 90px Segoe UI, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, 256, 256);
+
+  return new THREE.CanvasTexture(c);
+}
+
+/* ============================================================
+    3) THREE.js
+============================================================ */
+const container = document.getElementById("cube-wrapper");
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(5, 5, 5);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableZoom = false;
+controls.enablePan = false;
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 1.2;
+
+scene.add(new THREE.AmbientLight(0xffffff, 1));
+const light = new THREE.DirectionalLight(0xffffff, 0.9);
+light.position.set(6, 6, 4);
+scene.add(light);
+
+async function loadMaterials() {
+  return [
+    new THREE.MeshStandardMaterial({ map: createImageWithCenteredText("assets/dinos.jpeg", "Dinos") }),
+    new THREE.MeshStandardMaterial({ map: createImageWithCenteredText("assets/minas.jpeg", "Minas") }),
+    new THREE.MeshStandardMaterial({ map: createTextTexture("", "#033773") }),
+    new THREE.MeshStandardMaterial({ map: createTextTexture("", "#033773") }),
+    new THREE.MeshStandardMaterial({ map: createImageWithCenteredText("assets/astro.jpeg", "Astro") }),
+    new THREE.MeshStandardMaterial({ map: createImageWithCenteredText("assets/bio.jpeg", "Bio") }),
+  ];
+}
+
+async function initCube() {
+  const materials = await loadMaterials();
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.2, 3.2), materials);
+  scene.add(cube);
+
+  const routes = ["dino-scanner.html", "minas.html", "", "", "", "bio.html"];
+  const ray = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+
+  function detect(x, y) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((x - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((y - rect.top) / rect.height) * 2 + 1;
+    ray.setFromCamera(pointer, camera);
+    const hit = ray.intersectObject(cube);
+    if (hit.length && routes[hit[0].face.materialIndex]) {
+      window.location.href = routes[hit[0].face.materialIndex];
+    }
+  }
+
+  renderer.domElement.addEventListener("click", (e) => detect(e.clientX, e.clientY));
+  renderer.domElement.addEventListener("touchend", (e) => {
+    if (e.changedTouches[0]) detect(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+  });
+  renderer.domElement.addEventListener("pointermove", (e) => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) *2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height)*2 +1;
+    ray.setFromCamera(pointer, camera);
+    const hit = ray.intersectObject(cube);
+    renderer.domElement.style.cursor = hit.length && routes[hit[0].face.materialIndex] ? "pointer" : "grab";
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+}
+
+initCube();
+
+const resizeObserver = new ResizeObserver(() => {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  if (w && h) {
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+});
+resizeObserver.observe(container);
+
+/* Partículas */
+const pCanvas = document.getElementById("particles");
+const pCtx = pCanvas.getContext("2d");
+
+function resizeParticles() {
+  const main = document.querySelector("main");
+  pCanvas.width = main.clientWidth;
+  pCanvas.height = main.clientHeight;
+}
+resizeParticles();
+window.addEventListener("resize", resizeParticles);
+
+const particles = [];
+const count = window.innerWidth < 850 ? 35 : 70;
+
+for (let i = 0; i < count; i++) {
+  particles.push({
+    x: Math.random() * pCanvas.width,
+    y: Math.random() * pCanvas.height,
+    r: Math.random() * 2 + .7,
+    s: Math.random() * .25 + .05
+  });
+}
+
+function animateParticles() {
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  particles.forEach(p => {
+    pCtx.beginPath();
+    pCtx.fillStyle = "rgba(3,55,115,0.18)";
+    pCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    pCtx.fill();
+    p.y -= p.s;
+    if (p.y < -5) {
+      p.y = pCanvas.height + 5;
+      p.x = Math.random() * pCanvas.width;
+    }
+  });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+/* Botón Ayuda */
+const helpBtn = document.getElementById("help-btn");
+const helpModal = document.getElementById("help-modal");
+const closeHelp = document.getElementById("close-help");
+
+helpBtn.addEventListener("click", () => { helpModal.style.display = "flex"; });
+closeHelp.addEventListener("click", () => { helpModal.style.display = "none"; });
+helpModal.addEventListener("click", (e) => {
+  if (e.target === helpModal) helpModal.style.display = "none";
+});
+</script>
 </body>
 </html>

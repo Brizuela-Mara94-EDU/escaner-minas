@@ -579,30 +579,51 @@
     });
 
     sceneEl.addEventListener('arjs-video-loaded', (event) => {
-      console.log('✅ Video AR.js cargado correctamente');
-      updateDetectionStatus("Cámara activa - Busca un marcador");
-      
-      // 🔥 FIX PARA SAMSUNG DE ALTA GAMA
-      const arVideo = document.querySelector('video');
-      if (arVideo) {
-        arVideo.setAttribute('playsinline', '');
-        arVideo.style.position = 'fixed';
-        arVideo.style.top = '0';
-        arVideo.style.left = '0';
-        arVideo.style.width = '100vw';
-        arVideo.style.height = '100vh';
-        arVideo.style.objectFit = 'cover';
-        console.log('🎥 Video ajustado para Samsung alta gama');
-      }
-      
-      // Ajustar FOV según dispositivo
-      const camera = document.querySelector('a-entity[camera]');
-      if (camera) {
-        const fov = isMobile ? 70 : 60;
-        camera.setAttribute('fov', fov);
-        console.log(`📷 FOV ajustado a ${fov}°`);
-      }
-    });
+  console.log('✅ Video AR.js cargado correctamente');
+  updateDetectionStatus("Cámara activa - Busca un marcador");
+  
+  // --- FIX COMPLETO DE MININGTECH AR ---
+  const arVideo = document.querySelector('video');
+  const arCanvas = document.querySelector('.a-canvas');
+
+  if (arVideo) {
+    arVideo.setAttribute('playsinline', '');
+    arVideo.style.position = 'fixed';
+    arVideo.style.top = '0';
+    arVideo.style.left = '0';
+    arVideo.style.width = '100vw';
+    arVideo.style.height = '100vh';
+    arVideo.style.objectFit = 'contain'; // 👈 cambia 'cover' por 'contain'
+    arVideo.style.objectPosition = 'center center';
+    console.log('🎥 Cámara ajustada al tamaño completo (contain, sin zoom)');
+  }
+
+  if (arCanvas) {
+    arCanvas.style.position = 'fixed';
+    arCanvas.style.top = '0';
+    arCanvas.style.left = '0';
+    arCanvas.style.width = '100vw';
+    arCanvas.style.height = '100vh';
+    arCanvas.style.objectFit = 'contain'; // 👈 también para el canvas
+    arCanvas.style.objectPosition = 'center center';
+    console.log('🖼️ Canvas ajustado sin zoom ni recorte');
+  }
+
+  // 🔧 Ajuste del FOV de la cámara (campo de visión más natural)
+  const camera = sceneEl.querySelector('[camera]');
+  if (camera) {
+    const fov = checkIsMobile() ? 75 : 60; // más ancho en móviles
+    camera.setAttribute('fov', fov);
+    console.log(`📷 FOV ajustado a ${fov}° (sin recorte)`);
+  }
+
+  // Forzar fondo negro (mantener tu estética)
+  document.body.style.backgroundColor = '#000';
+  if (sceneEl) {
+    sceneEl.style.background = '#000';
+  }
+});
+
     
     sceneEl.addEventListener('camera-error', (error) => {
       console.error('❌ Error de cámara AR.js:', error);
