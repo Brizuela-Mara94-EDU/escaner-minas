@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>SIED - UNSJ | Realidad Aumentada</title>
 
-  <link rel="icon" type="image/png" href="/AppMindAr/assets/LOGO%20SIED%20SOLO-01-BluIfg0u.png">
+  <link rel="icon" type="image/png" href="/escaner-minas/assets/LOGO%20SIED%20SOLO-01-BluIfg0u.png">
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/examples/js/controls/OrbitControls.js"></script>
@@ -314,8 +314,8 @@ footer {
 
 <header>
   <div class="logos-container">
-    <img src="/AppMindAr/assets/logo%20UNSJ%20horizontal-02-CIFSIxLX.png" class="logo-unsj" alt="UNSJ" />
-    <img src="/AppMindAr/assets/LOGO%20SIED%20SOLO-01-BluIfg0u.png" class="logo-sied" alt="SIED" />
+    <img src="/escaner-minas/assets/logo%20UNSJ%20horizontal-02-CIFSIxLX.png" class="logo-unsj" alt="UNSJ" />
+    <img src="/escaner-minas/assets/LOGO%20SIED%20SOLO-01-BluIfg0u.png" class="logo-sied" alt="SIED" />
   </div>
 </header>
 
@@ -448,7 +448,7 @@ async function initCube() {
   const cube = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.2, 3.2), materials);
   scene.add(cube);
 
-  const routes = ["dino-scanner.html", "minas.html", "", "", "", "bio.html"];
+  const routes = ["dino-scanner.html", "minas.html", "", "", "astro.html", "bio.html"];
   const ray = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
 

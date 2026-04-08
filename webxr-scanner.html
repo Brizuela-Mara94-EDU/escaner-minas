@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>WebXR - AR sin marcador</title>
+
+    <!-- A-Frame -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
+            background-color: #000;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            position: fixed;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
+            pointer-events: none;
+            /* Para que los clicks pasen al canvas */
+        }
+
+        .header-logo {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .close-btn {
+            pointer-events: auto;
+            /* Reactivar clicks en el botón */
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+        }
+
+        .close-btn:hover {
+            background: rgba(21, 59, 130, 0.3);
+        }
+
+        .model-info {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(21, 59, 130, 0.5);
+            border-radius: 10px;
+            padding: 16px 28px;
+            z-index: 30;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+        }
+
+        .model-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .model-subtitle {
+            font-size: 12px;
+            color: #4A90E2;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .instructions {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(21, 59, 130, 0.4);
+            border-radius: 8px;
+            padding: 12px 24px;
+            z-index: 20;
+            text-align: center;
+            color: #fff;
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .instructions.hidden {
+            opacity: 0;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px;
+            }
+
+            .header-logo {
+                height: 40px;
+            }
+
+            .model-info {
+                top: auto;
+                bottom: 120px;
+            }
+        }
+
+        /* Entrar a AR Overlay (A-Frame nativo inyecta un botón, vamos a maquillarlo si aparece) */
+        .a-enter-vr {
+            bottom: 20px !important;
+            right: 20px !important;
+        }
+    </style>
+
+    <script>
+        // Componente de Hit-Test en WebXR
+        AFRAME.registerComponent('ar-hit-test', {
+            init: function () {
+                this.xrHitTestSource = null;
+                this.viewerSpace = null;
+                this.refSpace = null;
+
+                // Limpiar recursos cuando se sale 
+                this.el.sceneEl.addEventListener('exit-vr', () => {
+                    this.xrHitTestSource = null;
+                    this.viewerSpace = null;
+                    this.refSpace = null;
+                });
+
+                this.el.sceneEl.renderer.xr.addEventListener('sessionstart', (ev) => {
+                    let session = this.el.sceneEl.renderer.xr.getSession();
+
+                    let refSpaceType = 'local-floor'; // Usar el suelo
+                    session.requestReferenceSpace(refSpaceType).then((space) => {
+                        this.refSpace = space;
+                    });
+
+                    session.requestReferenceSpace('viewer').then((space) => {
+                        this.viewerSpace = space;
+                        session.requestHitTestSource({ space: this.viewerSpace }).then((hitTestSource) => {
+                            this.xrHitTestSource = hitTestSource;
+                        });
+                    });
+                });
+
+                this.el.sceneEl.renderer.xr.addEventListener('sessionend', (ev) => {
+                    this.xrHitTestSource = null;
+                    this.refSpace = null;
+                    this.viewerSpace = null;
+                });
+            },
+            tick: function () {
+                if (this.el.sceneEl.is('ar-mode')) {
+                    if (!this.viewerSpace) return;
+                    let frame = this.el.sceneEl.frame;
+                    if (!frame) return;
+                    let xrViewerPose = frame.getViewerPose(this.refSpace);
+                    if (this.xrHitTestSource && xrViewerPose) {
+                        let hitTestResults = frame.getHitTestResults(this.xrHitTestSource);
+                        if (hitTestResults.length > 0) {
+                            let pose = hitTestResults[0].getPose(this.refSpace);
+                            let inputMat = new THREE.Matrix4();
+                            inputMat.fromArray(pose.transform.matrix);
+                            let position = new THREE.Vector3();
+                            position.setFromMatrixPosition(inputMat);
+                            this.el.setAttribute('position', position);
+                            this.el.setAttribute('visible', 'true');
+                        } else {
+                            this.el.setAttribute('visible', 'false');
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</head>
+
+<body>
+
+    <div class="header">
+        <img src="./assets/logo sied horizontal-02-BF-xqR4y.png" class="header-logo" alt="SIED Logo"
+            onerror="this.style.display='none'">
+        <button class="close-btn" id="closeBtn" title="Cerrar">✕</button>
+    </div>
+
+    <div class="model-info" id="modelInfo">
+        <div class="model-name" id="modelName">Maquinaria</div>
+        <div class="model-subtitle">Modo Libre sin Marcador</div>
+    </div>
+
+    <div class="instructions" id="instructions">
+        <div style="font-weight: bold; margin-bottom:4px;">1. Entra a AR con el botón "AR" 👇</div>
+        <div style="font-size: 13px;">2. Apunta al piso hasta ver el círculo.</div>
+        <div style="font-size: 13px;">3. Toca la pantalla para colocar el modelo.</div>
+    </div>
+
+    <!-- A-Frame Scene -->
+    <!-- Requerimos soporte de hit-test en dispositivos compatibles con WebXR -->
+    <a-scene webxr="optionalFeatures: hit-test, local-floor;" renderer="colorManagement: true;"
+        background="color: #111">
+
+        <!-- Modelo Principal -->
+        <a-entity id="modelEntity" gltf-model="" position="0 0 -2" scale="0.5 0.5 0.5" visible="false"></a-entity>
+
+        <!-- Retículo de ayuda para hit-test -->
+        <a-entity id="reticle" visible="false" ar-hit-test>
+            <a-ring color="#4A90E2" radius-inner="0.15" radius-outer="0.2" rotation="-90 0 0"
+                material="opacity: 0.8; transparent: true;"></a-ring>
+            <a-circle color="#ffffff" radius="0.05" rotation="-90 0 0"
+                material="opacity: 0.8; transparent: true;"></a-circle>
+        </a-entity>
+
+        <a-camera position="0 1.6 0"></a-camera>
+        <a-light type="ambient" color="#fff" intensity="1"></a-light>
+        <a-light type="directional" color="#fff" intensity="0.5" position="-1 2 1"></a-light>
+    </a-scene>
+
+    <script>
+        // 1. Botón cerrar
+        document.getElementById('closeBtn').addEventListener('click', () => {
+            window.history.back();
+        });
+
+        // 2. Parámetros de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const markerParam = urlParams.get('marker');
+        const nameParam = urlParams.get('name');
+
+        if (nameParam) {
+            document.getElementById('modelName').textContent = nameParam;
+        }
+
+        // 3. Configurar modelo según el marker
+        const markerMap = {
+            'casco': 'lamp',
+            'pico': 'pico',
+            'camion': 'truck',
+            'tunel': 'tunel',
+            'garras': 'garras',
+            'perforadora': 'perforadora',
+            'carga': 'carga',
+            'oro': 'oro',
+            'wolframita': 'wolframita',
+            'truck': 'truck',
+            'renderamarillo': 'renderamarillo'
+        };
+
+        let modelFile = "lamp"; // fallback
+        if (markerParam) {
+            modelFile = markerMap[markerParam] || markerParam;
+        }
+
+        const modelEntity = document.getElementById('modelEntity');
+        modelEntity.setAttribute('gltf-model', `./models/${modelFile}.glb`);
+
+        // Configuraciones iniciales (escala adaptada para espacio real)
+        const modelConfig = {
+            'lamp': { scale: 0.8 },
+            'pico': { scale: 0.4 },
+            'truck': { scale: 2.0 },
+            'tunel': { scale: 0.25 },
+            'garras': { scale: 1.2 },
+            'perforadora': { scale: 2.2 },
+            'carga': { scale: 1.2 },
+            'oro': { scale: 0.01 },
+            'wolframita': { scale: 2.0 },
+            'renderamarillo': { scale: 0.25 }
+        };
+
+        let currentScale = 0.5;
+        if (modelConfig[modelFile]) {
+            currentScale = modelConfig[modelFile].scale;
+        }
+        modelEntity.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
+
+        // LOGICA DE TOQUE PARA PONER EL MODELO
+        const scene = document.querySelector('a-scene');
+        const reticle = document.getElementById('reticle');
+        const instructions = document.getElementById('instructions');
+
+        let modelPlaced = false;
+
+        scene.addEventListener('click', (e) => {
+            // Si estamos en modo AR
+            if (scene.is('ar-mode')) {
+                // En modo "Hit Test Real" (WebXR)
+                if (reticle.getAttribute('visible')) {
+                    const pos = reticle.getAttribute('position');
+                    modelEntity.setAttribute('position', pos);
+                    modelEntity.setAttribute('visible', 'true');
+                    modelPlaced = true;
+                    instructions.classList.add('hidden');
+                } else if (!modelPlaced) {
+                    // Fallback: colocar a 2 metros al frente a nivel del piso simulado
+                    const camera = document.querySelector('[camera]').object3D;
+                    const direction = new THREE.Vector3();
+                    camera.getWorldDirection(direction);
+                    direction.multiplyScalar(2);
+                    const newPos = camera.position.clone().add(direction);
+                    newPos.y = 0; // Simulación de piso
+
+                    modelEntity.setAttribute('position', { x: newPos.x, y: newPos.y, z: newPos.z });
+                    modelEntity.setAttribute('visible', 'true');
+                    modelPlaced = true;
+                    instructions.classList.add('hidden');
+                }
+            } else {
+                // En modo no-AR (navegador de compu), lo mostramos en el centro 
+                if (!modelPlaced) {
+                    modelEntity.setAttribute('position', '0 0 -3'); // altura relativa
+                    modelEntity.setAttribute('visible', 'true');
+                    modelPlaced = true;
+                    instructions.classList.add('hidden');
+                }
+            }
+        });
+
+    </script>
+</body>
+
+</html>

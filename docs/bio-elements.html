@@ -4,14 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SIED - Biología AR</title>
-  <link rel="icon" type="image/png" href="/AppMindAr/assets/LOGO%20SIED%20SOLO-01-BluIfg0u.png">
+  <link rel="icon" type="image/png" href="/escaner-minas/assets/LOGO%20SIED%20SOLO-01-BluIfg0u.png">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
     body{
       font-family:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
       /* Fondo Bosque con overlay */
-      background: linear-gradient(rgba(0, 20, 0, 0.85), rgba(0, 10, 0, 0.95)), url('assets/bosque.png') no-repeat center center fixed;
+      background: linear-gradient(rgba(0, 20, 0, 0.85), rgba(0, 10, 0, 0.95)), url('assets/bosque.jpg') no-repeat center center fixed;
       background-size: cover;
       color:#fff; overflow:hidden;
     }
@@ -204,7 +204,7 @@
   </div>
 
   <header>
-    <img src="/AppMindAr/assets/LOGO%20SIED%20SOLO-01-BluIfg0u.png" class="header-logo" alt="SIED Logo">
+    <img src="/escaner-minas/assets/LOGO%20SIED%20SOLO-01-BluIfg0u.png" class="header-logo" alt="SIED Logo">
   </header>
 
   <div class="layout">
@@ -414,7 +414,7 @@
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         stream.getTracks().forEach(track => track.stop());
         const m = bioModels[filteredIndexes[currentFilteredIndex]];
-        const url = `bio-scanner.html?marker=${m.arMarker}&name=${encodeURIComponent(m.name)}`;
+        const url = `arjs-scanner.html?marker=${m.arMarker}&name=${encodeURIComponent(m.name)}`;
         window.location.href = url;
       } catch (err) {
         alert('Permiso de cámara denegado.');

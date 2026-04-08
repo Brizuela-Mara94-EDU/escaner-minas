@@ -285,7 +285,7 @@
   <script>
     window.addEventListener('DOMContentLoaded', () => {
       const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-      const BASE_PATH = isProduction ? '/AppMindAr' : '';
+      const BASE_PATH = isProduction ? '/escaner-minas' : '';
       
       const scene = document.querySelector('a-scene');
       
@@ -331,7 +331,7 @@
       7: { scale: 0.5, position: '0 0 0', rotation: '0 0 0' },     // Helecho
       8: { scale: 0.4, position: '0 0 0', rotation: '0 0 0' },     // Cactus
       9: { scale: 0.5, position: '0 0 0', rotation: '0 90 0' },    // Saltamontes
-      10: { scale: 0.5, position: '0 0 0', rotation: '0 0 0' },    // Araña
+      10: { scale: 0.5, position: '0 0 0', rotation: '0 90 0' },    // Araña
       11: { scale: 0.05, position: '0 0 0', rotation: '0 0 0' }    // Bosque (Suele ser grande)
     };
 
@@ -345,7 +345,7 @@
     };
     
     const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-    const BASE_PATH = isProduction ? '/AppMindAr' : '';
+    const BASE_PATH = isProduction ? '/escaner-minas' : '';
     
     // Variables globales
     let currentModel = null;

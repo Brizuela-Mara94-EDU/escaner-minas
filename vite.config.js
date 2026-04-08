@@ -11,7 +11,7 @@ export default defineConfig(({ command }) => {
       host: true,
       open: true, // abre el navegador
     },
-    base: isDev ? './' : '/AppMindAr/', // ✅ rutas correctas para ambos entornos
+    base: isDev ? './' : '/escaner-minas/', // ✅ rutas correctas para ambos entornos
     build: {
       outDir: 'docs',
       rollupOptions: {
@@ -21,11 +21,14 @@ export default defineConfig(({ command }) => {
           elements: resolve(__dirname, 'elements.html'),
           scanner: resolve(__dirname, 'scanner.html'),
           bio: resolve(__dirname, 'bio.html'),
+          astro: resolve(__dirname, 'astro.html'),
           'dino-scanner': resolve(__dirname, 'dino-scanner.html'),
-          'arjs-scanner': resolve(__dirname, 'arjs-scanner.html'),     
+          'arjs-scanner': resolve(__dirname, 'arjs-scanner.html'),
+          'astro-scanner': resolve(__dirname, 'astro-scanner.html'),
           'bio-scanner': resolve(__dirname, 'bio-scanner.html'),
           'bio-elements': resolve(__dirname, 'bio-elements.html'),
-
+          'visor3d': resolve(__dirname, 'visor3d.html'),
+          'webxr-scanner': resolve(__dirname, 'webxr-scanner.html'),
         },
       },
     },
