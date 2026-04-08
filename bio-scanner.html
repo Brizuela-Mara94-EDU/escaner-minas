@@ -285,7 +285,7 @@
   <script>
     window.addEventListener('DOMContentLoaded', () => {
       const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-      const BASE_PATH = isProduction ? '/escaner-minas' : '';
+      const BASE_PATH = isProduction ? '.' : '';
       
       const scene = document.querySelector('a-scene');
       
@@ -345,7 +345,7 @@
     };
     
     const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-    const BASE_PATH = isProduction ? '/escaner-minas' : '';
+    const BASE_PATH = isProduction ? '.' : '';
     
     // Variables globales
     let currentModel = null;

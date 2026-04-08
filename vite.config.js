@@ -11,9 +11,9 @@ export default defineConfig(({ command }) => {
       host: true,
       open: true, // abre el navegador
     },
-    base: isDev ? './' : '/escaner-minas/', // ✅ rutas correctas para ambos entornos
+    base: isDev ? './' : './', // ✅ rutas correctas para ambos entornos
     build: {
-      outDir: 'docs',
+      outDir: 'dist',
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'index.html'),

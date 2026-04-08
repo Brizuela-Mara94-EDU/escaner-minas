@@ -764,9 +764,9 @@
   <div class="page-indicator" id="pageIndicator">01 <span>/ 06</span></div>
 
   <script>
-  // Calcular BASE_PATH como en el escáner ('' en dev, '/escaner-minas' en producción)
+  // Calcular BASE_PATH como en el escáner ('' en dev, '.' en producción)
   const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-  const BASE_PATH = isProduction ? '/escaner-minas' : '';
+  const BASE_PATH = isProduction ? '.' : '';
 
   const machines = [
       // Seis elementos en el orden solicitado: Sol, Astronauta, Agujero Negro, Luna, Tierra, Marte

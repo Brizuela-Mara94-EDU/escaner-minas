@@ -831,7 +831,7 @@
     // ✅ Configurar modelos al inicio
     window.addEventListener('DOMContentLoaded', () => {
       const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-      const BASE_PATH = isProduction ? '/escaner-minas' : '';
+      const BASE_PATH = isProduction ? '.' : '';
       
       // Asignar modelos a cada marcador (IDs 33..38)
       for (let i = 33; i <= 38; i++) {
@@ -860,7 +860,7 @@
     
     // ✅ Detectar entorno
     const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-    const BASE_PATH = isProduction ? '/escaner-minas' : '';
+    const BASE_PATH = isProduction ? '.' : '';
     
     // Configuración personalizada para cada modelo
     const modelConfig = {
